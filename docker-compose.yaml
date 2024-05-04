@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - ./data:/data
+  frontend:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3000:3000"
