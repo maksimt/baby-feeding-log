@@ -16,7 +16,7 @@ function AddFeedingForm() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const response = await fetch('/add-feeding/', {
+        const response = await fetch('http://10.154.71.199:7989/add-feeding/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
