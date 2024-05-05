@@ -29,7 +29,7 @@ app.add_middleware(
 DATA_FILE = "/app/data/feedings.jsonl"
 
 @app.post("/events/")
-def create_event(event: Event):
+def create_event(event: Union[FeedingEvent,PoopEvent,SpitUpEvent]):
     try:
         with open(DATA_FILE, "a") as file:
             file.write(event.json() + "\n")
@@ -50,7 +50,7 @@ def load_events():
         print(f"Error reading {DATA_FILE}: {str(e)}")
     return events
 
-@app.get("/events/", response_model=List[Union[FeedingEvent,PoopEvent,SpitUpEvent]])
+@app.get("/events/", response_model=List[Union[Event,FeedingEvent,PoopEvent,SpitUpEvent]])
 async def get_events():
     events = load_events()
     # Sort events by timestamp in reverse order and return the first 100

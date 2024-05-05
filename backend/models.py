@@ -15,7 +15,7 @@ class Event(BaseModel):
         return v
 
 class FeedingEvent(Event):
-    amount_ml: float
+    amount_oz: float
 
 class PoopEvent(Event):
     consistency: str
@@ -26,11 +26,14 @@ class SpitUpEvent(Event):
 def create_event_object(data: dict) -> Event:
     event_type = data.get('event_type')
     logging.info("Creating event of type %s with data %s", event_type, str(data))
-    if event_type == 'feeding':
-        return FeedingEvent(**data)
-    elif event_type == 'poop':
-        return PoopEvent(**data)
-    elif event_type == 'spit up':
-        return SpitUpEvent(**data)
-    else:
-        raise ValidationError('Unsupported event type')
+    try:
+        if event_type == 'feeding':
+            return FeedingEvent(**data)
+        elif event_type == 'poop':
+            return PoopEvent(**data)
+        elif event_type == 'spit up':
+            return SpitUpEvent(**data)
+        else:
+            raise ValidationError('Unsupported event type')
+    except ValidationError:
+        return Event(**data)

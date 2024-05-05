@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { getEmoji } from '../utils'; // Import the getEmoji function
+
 
 function formatDateToInputString(date) {
     const year = date.getFullYear();
@@ -16,7 +18,7 @@ function AddEventForm() {
         timestamp: new Date(),
         event_type: 'feeding',  // Default event type
         notes: '',
-        amount_ml: '',  // Initialize as empty string to avoid uncontrolled components
+        amount_oz: '',  // Initialize as empty string to avoid uncontrolled components
         consistency: '',  // Initialize as empty string to avoid uncontrolled components
         volume: ''  // Initialize as empty string to avoid uncontrolled components
     });
@@ -32,7 +34,7 @@ function AddEventForm() {
             // Reset specific fields when changing types
             setEvent({
                 ...event,
-                amount_ml: '',
+                amount_oz: '',
                 consistency: '',
                 volume: '',
                 [name]: value
@@ -49,7 +51,9 @@ function AddEventForm() {
         e.preventDefault();
         const eventToSend = {
             ...event,
-            timestamp: Math.floor(event.timestamp.getTime() / 1000)  // Convert Date object to Unix timestamp
+            timestamp: Math.floor(event.timestamp.getTime() / 1000),  // Convert Date object to Unix timestamp
+            amount_oz: parseFloat(event.amount_oz),
+            volume: parseFloat(event.volume)
         };
 
         const response = await fetch('http://10.154.71.199:7989/events/', {
@@ -71,7 +75,7 @@ function AddEventForm() {
 
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form className="form-input" onSubmit={handleSubmit}>
             <div>
                 <label htmlFor="timestamp">Timestamp:</label>
                 <input
@@ -86,19 +90,15 @@ function AddEventForm() {
             <div>
                 <label htmlFor="event_type">Event Type:</label>
                 <select id="event_type" name="event_type" value={event.event_type} onChange={handleChange}>
-                    <option value="feeding">Feeding</option>
-                    <option value="poop">Poop</option>
-                    <option value="spit up">Spit Up</option>
+                    <option value="feeding">{getEmoji("feeding")} Feeding</option>
+                    <option value="poop">{getEmoji("poop")} Poop</option>
+                    <option value="spit up">{getEmoji("spit up")} Spit Up</option>
                 </select>
-            </div>
-            <div>
-                <label htmlFor="notes">Notes:</label>
-                <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
             </div>
             {event.event_type === 'feeding' && (
                 <div>
-                    <label htmlFor="amount_ml">Amount (ml):</label>
-                    <input type="number" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="Amount (ml)" required />
+                    <label htmlFor="amount_oz">Amount (oz):</label>
+                    <input type="number" id="amount_oz" name="amount_oz" value={event.amount_oz || ''} onChange={handleChange} placeholder="Amount (oz)" required />
                 </div>
             )}
             {event.event_type === 'poop' && (
@@ -113,6 +113,10 @@ function AddEventForm() {
                     <input type="text" id="volume" name="volume" value={event.volume || ''} onChange={handleChange} placeholder="Volume" required />
                 </div>
             )}
+            <div>
+                <label htmlFor="notes">Notes:</label>
+                <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
+            </div>
             <button type="submit">Add Event</button>
         </form>
     );
