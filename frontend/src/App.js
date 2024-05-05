@@ -1,11 +1,12 @@
 import React from 'react';
-import AddFeedingForm from './components/AddFeedingForm';
+import AddEventForm from './components/AddEventForm';
+import EventList from './components/EventList';
 
 function App() {
     return (
         <div>
-            <h1>Newborn Feeding Log</h1>
-            <AddFeedingForm />
+            <AddEventForm />
+            <EventList />
         </div>
     );
 }
