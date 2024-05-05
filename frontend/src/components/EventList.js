@@ -57,8 +57,8 @@ function EventList() {
                                 <span style={{ display: 'inline' }}>
                                     {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
                                 </span>
-                                <button onClick={() => confirmDelete(event.timestamp)} style={{ display: 'inline', color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px' }}>
-                                    ❌
+                                <button onClick={() => confirmDelete(event.timestamp)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px' }}>
+                                    X
                                 </button>
                             </li>
                         ))}
