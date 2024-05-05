@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import config from '../config'
 
 function ReportPage() {
+    const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const plotUrl = `${config.API_URL}/events/cumulative-history-plot/?tz=${tz}`; // Update with actual backend URL
+
+
     return (
+        
         <div>
-            <h1>Report Page</h1>
-            <p>This is where reports will be displayed.</p>
+            <h3>Cummulative Eating by Hour</h3>
+            <iframe
+                src={plotUrl}
+                width="90%"
+                height="600"
+                style={{ border: 'none' }}
+                title="Plotly Plot">
+            </iframe>
         </div>
     );
 }

@@ -8,7 +8,7 @@ function App() {
     return (
         <Router>
             <div>
-                <nav style={{ textAlign: 'right', padding: '10px' }}>
+                <nav style={{ textAlign: 'right', padding: '3px' }}>
                     <Link to="/" style={{ marginRight: '20px' }}>Home</Link>
                     <Link to="/report">Report</Link>
                 </nav>

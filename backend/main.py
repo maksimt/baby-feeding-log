@@ -2,10 +2,13 @@ import tempfile
 import shutil
 import os
 
+import pandas as pd
+
 from fastapi import FastAPI, HTTPException, Request
 from models import Event, FeedingEvent, PoopEvent, SpitUpEvent, create_event_object
 from fastapi.middleware.cors import CORSMiddleware
-
+import plotly.graph_objects as go
+from fastapi.responses import HTMLResponse
 import json
 from typing import List, Union
 import logging
@@ -99,3 +102,58 @@ def update_data_file(lines, data_file_path):
         os.remove(temp_file_path)
         logging.info(f"Failed to update the data file: {e}")
         raise
+
+
+@app.get("/events/cumulative-history-plot", response_class=HTMLResponse)
+async def get_cummulative_history_plot(tz: str):
+    # Create an empty figure
+    df = events_dataframe()
+    logging.info("Plotting df %s", df.info())
+
+    # Filter for 'feeding' events
+    df_feeding = df[df['event_type'] == 'feeding']
+
+    # Convert timestamps to datetime and extract date and hour
+    df_feeding['datetime'] = pd.to_datetime(df_feeding['timestamp'], unit='s', utc=True).dt.tz_convert(tz)
+    df_feeding['date'] = df_feeding['datetime'].dt.date
+    df_feeding['hour'] = df_feeding['datetime'].dt.hour
+
+    df_feeding = df_feeding.sort_values(by=['date', 'hour'])
+
+    # Group by date and hour, then calculate the cumulative sum of amount_oz
+    df_feeding['cumulative_amount'] = df_feeding.groupby(['date'])['amount_oz'].cumsum()
+
+    # Filter for the most recent 7 days
+    max_date = df_feeding['date'].max()
+    min_date = max_date - pd.Timedelta(days=6)
+    df_feeding = df_feeding[(df_feeding['date'] >= min_date) & (df_feeding['date'] <= max_date)]
+
+    # Create a plot
+    fig = go.Figure()
+
+    for date in df_feeding['date'].unique():
+        df_date = df_feeding[df_feeding['date'] == date].sort_values('hour')
+        fig.add_trace(go.Scatter(x=df_date['hour'], y=df_date['cumulative_amount'], mode='lines+markers', name=str(date)))
+
+    fig.update_layout(
+        title='Cumulative Feeding Amount by Hour of Day',
+        xaxis_title=f'Hour of Day ({tz})',
+        yaxis_title='Cumulative Amount (oz)',
+        legend_title=f'Date ({tz})'
+    )
+    
+    # You can customize your figure here with data and layout
+    html = fig.to_html(include_plotlyjs='cdn', full_html=True)
+    logging.info(f"Generated HTML length: {len(html)} bytes")
+    # Return the HTML representation of the figure
+    return html
+
+def events_dataframe() -> pd.DataFrame:
+    records = []
+    with open(DATA_FILE, 'r') as file:
+        for line in file:
+            if line.startswith(DELETED_INDICATOR):
+                continue
+            records.append(json.loads(line))
+    df = pd.DataFrame.from_records(records)
+    return df

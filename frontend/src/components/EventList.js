@@ -51,32 +51,28 @@ function EventList() {
 
     return (
         <div>
-            <div style={{ textAlign: 'right' }}>
-                <button onClick={handlePrint} style={{ marginRight: '20px' }}>Print</button>
-            </div>
-            <div>
-                <br />
-                {Object.keys(events).map((date, index) => (
-                    <div key={index}>
-                        <h3>{date}</h3>
-                        <p>Total Feedings: {calculateFeedingTotals(events[date])} oz</p>
-                        <ul style={{ listStyleType: 'none' }}>
-                            {events[date].map((event, idx) => (
-                                <li key={idx} style={{ color: getColor(event.event_type) }}>
-                                    <span style={{ display: 'inline' }}>
-                                        {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
-                                    </span>
-                                    <button onClick={() => confirmDelete(event.timestamp)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', 'font-size': '12px' }}>
-                                        X
-                                    </button>
-                                </li>
-                            ))}
+            <br />
+            {Object.keys(events).map((date, index) => (
+                <div key={index}>
+                    <h3>{date}</h3>
+                    <p>Total Feedings: {calculateFeedingTotals(events[date])} oz</p>
+                    <ul style={{ listStyleType: 'none' }}>
+                        {events[date].map((event, idx) => (
+                            <li key={idx} style={{ color: getColor(event.event_type) }}>
+                                <span style={{ display: 'inline' }}>
+                                    {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
+                                </span>
+                                <button onClick={() => confirmDelete(event.timestamp)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', 'font-size': '12px' }}>
+                                    X
+                                </button>
+                            </li>
+                        ))}
 
-                        </ul>
-                        {index < Object.keys(events).length - 1 && <hr />} {/* Add a horizontal line between days */}
-                    </div>
-                ))}
-            </div>
+                    </ul>
+                    {index < Object.keys(events).length - 1 && <hr />} {/* Add a horizontal line between days */}
+                </div>
+            ))}
+            <button onClick={handlePrint} style={{ marginRight: '20px' }}>Print</button>
         </div>
     );
 }
