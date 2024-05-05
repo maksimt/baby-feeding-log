@@ -5,13 +5,20 @@ body {
         sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-        background-color: #333;
-            /* Dark grey background */
-            color: #f1c40f;
-            /* Light yellow text */
+    background-color: #333;
+        /* Dark grey background */
+        color: #f1c40f;
+        /* Light yellow text */
 }
 
-
+a {
+    padding: 5px;
+    background-color: #888;
+    color: #f1c40f;
+    text-decoration: none;
+    border-radius: 2px;
+    font-size: 20px;
+}
 
 input,
 select,
@@ -48,6 +55,7 @@ textarea,
         /* Ensure text is black for printing */
         background: white;
         /* White background for printing */
+        font-size: 12px;
     }
 
         input,
@@ -55,6 +63,7 @@ textarea,
         button,
         textarea,
         .form-input,
+                a,
         button {
         display: none;
         /* Hide buttons when printing */
@@ -63,7 +72,9 @@ textarea,
     .event-item {
         color: black;
         /* Override any color styling for printing */
+        font-size: 12px;
     }
+
 }
 
 /* Non-printing styles can go here */
