@@ -1,3 +1,7 @@
+import tempfile
+import shutil
+import os
+
 from fastapi import FastAPI, HTTPException, Request
 from models import Event, FeedingEvent, PoopEvent, SpitUpEvent, create_event_object
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,11 +44,15 @@ async def create_event(event: Request):
         logging.exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
+DELETED_INDICATOR = '#'
+
 def load_events():
     events = []
     try:
         with open(DATA_FILE, 'r') as file:
             for line in file:
+                if line.startswith(DELETED_INDICATOR):
+                    continue
                 event_data = json.loads(line)
                 events.append(create_event_object(event_data))
     except FileNotFoundError:
@@ -59,3 +67,35 @@ async def get_events():
     # Sort events by timestamp in reverse order and return the first 100
     return sorted(events, key=lambda x: x.timestamp, reverse=True)[:100]
 
+@app.delete("/events/{timestamp}")
+async def delete_event(timestamp: str):
+    try:
+        # Attempt to find and remove the event with the given timestamp
+        lines = []
+        with open(DATA_FILE, 'r') as file:
+            for line in file:
+                if timestamp in line:
+                    line = DELETED_INDICATOR + line
+                lines.append(line)
+        update_data_file(lines, DATA_FILE)
+        return {"success": True, "msg": "Event deleted"}
+    except Exception as e:
+        # Log error, handle or raise more specific exceptions as needed
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete event")
+    
+def update_data_file(lines, data_file_path):
+    # Step 1: Write to a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        tmp_file.writelines(lines)
+        temp_file_path = tmp_file.name  # Store temporary file name
+    
+    # Step 2: Replace the old file with the new temporary file
+    try:
+        shutil.move(temp_file_path, data_file_path)
+        logging.info(f"Successfully updated the data file at {data_file_path}")
+    except Exception as e:
+        # If the move operation fails, remove the temp file
+        os.remove(temp_file_path)
+        logging.info(f"Failed to update the data file: {e}")
+        raise

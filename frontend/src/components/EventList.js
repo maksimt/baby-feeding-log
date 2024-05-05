@@ -2,6 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { getEmoji } from '../utils'; // Import the getEmoji function
 import config from '../config';  // Adjust the import path based on your file structure
 
+function confirmDelete(timestamp) {
+    if (window.confirm("Are you sure you want to delete this event?")) {
+        deleteEvent(timestamp);
+    }
+}
+
+async function deleteEvent(timestamp) {
+    try {
+        const response = await fetch(`${config.API_URL}/events/${timestamp}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+            // Refresh the events list if deletion was successful
+            window.location.reload();
+        } else {
+            alert('Failed to delete event.');
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event.');
+    }
+}
+
+
 function EventList() {
     const [events, setEvents] = useState({});
 
@@ -29,9 +54,15 @@ function EventList() {
                     <ul style={{ listStyleType: 'none' }}>
                         {events[date].map((event, idx) => (
                             <li key={idx} style={{ color: getColor(event.event_type) }}>
-                                {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
+                                <span style={{ display: 'inline' }}>
+                                    {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
+                                </span>
+                                <button onClick={() => confirmDelete(event.timestamp)} style={{ display: 'inline', color: 'red', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px' }}>
+                                    ❌
+                                </button>
                             </li>
                         ))}
+
                     </ul>
                     {index < Object.keys(events).length - 1 && <hr />} {/* Add a horizontal line between days */}
                 </div>
@@ -57,17 +88,23 @@ function calculateFeedingTotals(events) {
 
 function convertUnixTimeToLocalTime(unixTimestamp) {
     const date = new Date(unixTimestamp * 1000);
-    return date.toLocaleString();  // Converts date to a string using the local time zone
+    // Use toLocaleTimeString with options to format time in 24-hour format
+    return date.toLocaleTimeString('en-US', {
+        hour12: false,  // Use 24-hour time format
+        hour: '2-digit',  // Two digit hour
+        minute: '2-digit',  // Two digit minute
+    });
 }
+
 
 function renderEventData(event) {
     switch (event.event_type) {
         case 'feeding':
-            return `Amount: ${event.amount_oz} oz`;
+            return `Ate: ${event.amount_oz} oz`;
         case 'poop':
             return `Consistency: ${event.consistency}`;
         case 'spit up':
-            return `Amount: ${event.amount_ml} ml`;
+            return `Spit up: ${event.amount_ml} ml`;
         default:
             return '';
     }
@@ -76,14 +113,15 @@ function renderEventData(event) {
 function getColor(eventType) {
     switch (eventType) {
         case 'feeding':
-            return 'white';
+            return 'white';  // No change for feeding events
         case 'poop':
-            return 'brown';
+            return '#cc9966';  // Light brown color
         case 'spit up':
-            return 'green';
+            return '#b3b3cc';  // Light grey color
         default:
-            return 'black';
+            return 'black';  // Default color
     }
 }
+
 
 export default EventList;
