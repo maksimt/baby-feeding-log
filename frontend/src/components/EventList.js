@@ -75,7 +75,7 @@ function renderEventData(event) {
 function getColor(eventType) {
     switch (eventType) {
         case 'feeding':
-            return 'blue';
+            return 'white';
         case 'poop':
             return 'brown';
         case 'spit up':

@@ -25,7 +25,6 @@ class SpitUpEvent(Event):
 
 def create_event_object(data: dict) -> Event:
     event_type = data.get('event_type')
-    logging.info("Creating event of type %s with data %s", event_type, str(data))
     try:
         if event_type == 'feeding':
             return FeedingEvent(**data)

@@ -5,15 +5,39 @@ body {
         sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-/* Default font size */
-.form-input {
-    font-size: 20px;
+        background-color: #333;
+            /* Dark grey background */
+            color: #f1c40f;
+            /* Light yellow text */
 }
 
-/* Large font size for mobile */
-@media screen and (max-width: 768px) {
+
+
+input,
+select,
+button,
+textarea,
+.form-input {
+    font-size: 20px;
+    /* Default font size */
+    background-color: #444;
+    /* Slightly lighter grey for inputs */
+    color: #f1c40f;
+    /* Light yellow text */
+    /* border: none;
+    padding: 10px;
+    margin: 5px; */
+}
+
+/* Larger font sizes for mobile devices */
+@media (max-width: 768px) {
+
+    input,
+    select,
+    button,
+    textarea,
     .form-input {
         font-size: 28px;
+        /* Larger font size for better readability on mobile */
     }
 }
