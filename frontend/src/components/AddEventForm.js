@@ -66,11 +66,11 @@ function AddEventForm() {
 
         const data = await response.json();
         if (data.success) {
-            alert(`${event.event_type} event added!`);
-            setEvent({ timestamp: new Date(), event_type: 'feeding', notes: '', amount_ml: '', consistency: '', volume: '' });
+            window.location.reload();  // Reloads the current page
         } else {
-            alert('Failed to add event.');
+            alert('Failed to add event. {data}');
         }
+
     };
 
 
