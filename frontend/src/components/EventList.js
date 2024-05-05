@@ -27,6 +27,11 @@ async function deleteEvent(timestamp) {
 }
 
 
+const handlePrint = () => {
+    // Function to handle print
+    window.print();
+};
+
 function EventList() {
     const [events, setEvents] = useState({});
 
@@ -46,6 +51,7 @@ function EventList() {
 
     return (
         <div>
+            <button onClick={handlePrint} style={{ marginRight: '20px' }}>Print</button>
             <br />
             {Object.keys(events).map((date, index) => (
                 <div key={index}>

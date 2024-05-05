@@ -41,3 +41,29 @@ textarea,
         /* Larger font size for better readability on mobile */
     }
 }
+
+@media print {
+    body {
+        color: black;
+        /* Ensure text is black for printing */
+        background: white;
+        /* White background for printing */
+    }
+
+        input,
+        select,
+        button,
+        textarea,
+        .form-input,
+        button {
+        display: none;
+        /* Hide buttons when printing */
+    }
+
+    .event-item {
+        color: black;
+        /* Override any color styling for printing */
+    }
+}
+
+/* Non-printing styles can go here */
