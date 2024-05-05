@@ -18,16 +18,29 @@ function EventList() {
 
     return (
         <div>
-            <h2>Recent Events</h2>
-            <ul>
+            <br/>
+            <ul style={{ listStyleType: 'none' }}>
                 {events.map((event, index) => (
                     <li key={index} style={{ color: getColor(event.event_type) }}>
-                        {convertUnixTimeToLocalTime(event.timestamp)} - {event.event_type} - {event.notes}
+                        {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | { event.notes }
                     </li>
                 ))}
             </ul>
         </div>
     );
+}
+
+function renderEventData(event) {
+    switch (event.event_type) {
+        case 'feeding':
+            return `Amount: ${event.amount_ml} ml`;
+        case 'poop':
+            return `Consistency: ${event.consistency}`;
+        case 'spit up':
+            return `Volume: ${event.volume}`;
+        default:
+            return '';
+    }
 }
 
 function convertUnixTimeToLocalTime(unixTimestamp) {
@@ -45,6 +58,19 @@ function getColor(eventType) {
             return 'green';
         default:
             return 'black';
+    }
+}
+
+function getEmoji(eventType) {
+    switch (eventType) {
+        case 'feeding':
+            return '🍼';
+        case 'poop':
+            return '💩';
+        case 'spit up':
+            return '🤮';
+        default:
+            return '❓';
     }
 }
 

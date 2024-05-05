@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException
-from models import Event
+from models import Event, FeedingEvent, PoopEvent, SpitUpEvent, create_event_object
 from fastapi.middleware.cors import CORSMiddleware
 
 import json
-from typing import List
+from typing import List, Union
 import logging
 from fastapi import FastAPI, HTTPException
 
@@ -43,14 +43,14 @@ def load_events():
         with open(DATA_FILE, 'r') as file:
             for line in file:
                 event_data = json.loads(line)
-                events.append(Event(**event_data))
+                events.append(create_event_object(event_data))
     except FileNotFoundError:
         print(f"Warning: {DATA_FILE} not found.")
     except Exception as e:
         print(f"Error reading {DATA_FILE}: {str(e)}")
     return events
 
-@app.get("/events/", response_model=List[Event])
+@app.get("/events/", response_model=List[Union[FeedingEvent,PoopEvent,SpitUpEvent]])
 async def get_events():
     events = load_events()
     # Sort events by timestamp in reverse order and return the first 100
