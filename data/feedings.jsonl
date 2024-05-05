@@ -16,3 +16,9 @@
 {"timestamp":1714926608,"event_type":"poop","notes":"","consistency":"Sounds wet"}
 {"timestamp":1714925700,"event_type":"feeding","notes":"50 ml boobs","amount_oz":3.0}
 {"timestamp":1714930200,"event_type":"spit up","notes":"","amount_ml":5}
+{"timestamp":1714933966,"event_type":"spit up","notes":"","consistency":""}
+{"timestamp":1714934498,"event_type":"spit up","notes":"Testing","consistency":""}
+{"timestamp":1714934591,"event_type":"spit up","notes":"Testing","consistency":""}
+{"timestamp":1714935144,"event_type":"spit up","notes":"Testing","consistency":""}
+{"timestamp":1714935154,"event_type":"spit up","notes":"Testing","consistency":""}
+{"timestamp": 1714936889, "event_type": "spit up", "notes": "", "amount_oz": "", "consistency": "", "amount_ml": 33}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { getEmoji } from '../utils'; // Import the getEmoji function
-import config from '../config';  // Adjust the import path based on your file structure
-
+import config from '../config';  // Ensure the path to your config file is correct
 
 function formatDateToInputString(date) {
     const year = date.getFullYear();
@@ -12,7 +11,6 @@ function formatDateToInputString(date) {
 
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
-
 
 function AddEventForm() {
     const [event, setEvent] = useState({
@@ -52,10 +50,17 @@ function AddEventForm() {
         e.preventDefault();
         const eventToSend = {
             ...event,
-            timestamp: Math.floor(event.timestamp.getTime() / 1000),  // Convert Date object to Unix timestamp
-            amount_oz: parseFloat(event.amount_oz),
-            amount_ml: parseFloat(event.amount_ml)
+            timestamp: Math.floor(event.timestamp.getTime() / 1000)  // Convert Date object to Unix timestamp
         };
+
+        // Conditionally add type-specific fields to avoid sending unnecessary data
+        if (event.event_type === 'feeding') {
+            eventToSend.amount_oz = parseFloat(event.amount_oz);
+        } else if (event.event_type === 'poop') {
+            eventToSend.consistency = event.consistency;
+        } else if (event.event_type === 'spit up') {
+            eventToSend.amount_ml = parseFloat(event.amount_ml);
+        }
 
         const response = await fetch(`${config.API_URL}/events/`, {
             method: 'POST',
@@ -69,11 +74,9 @@ function AddEventForm() {
         if (data.success) {
             window.location.reload();  // Reloads the current page
         } else {
-            alert('Failed to add event. {data}');
+            alert(`Failed to add event: ${data.message}`);  // Show error message from the response
         }
-
     };
-
 
     return (
         <form className="form-input" onSubmit={handleSubmit}>
@@ -110,8 +113,8 @@ function AddEventForm() {
             )}
             {event.event_type === 'spit up' && (
                 <div>
-                    <label htmlFor="amount_ml">amount_ml:</label>
-                    <input type="text" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="amount_ml" required />
+                    <label htmlFor="amount_ml">Amount (ml):</label>
+                    <input type="number" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="Amount (ml)" required />
                 </div>
             )}
             <div>

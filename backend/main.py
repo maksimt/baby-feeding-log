@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from models import Event, FeedingEvent, PoopEvent, SpitUpEvent, create_event_object
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,12 +29,15 @@ app.add_middleware(
 DATA_FILE = "/app/data/feedings.jsonl"
 
 @app.post("/events/")
-def create_event(event: Union[FeedingEvent,PoopEvent,SpitUpEvent]):
+async def create_event(event: Request):
     try:
+        json_value = await event.json()
+        logging.info("Got event %s", json_value)
         with open(DATA_FILE, "a") as file:
-            file.write(event.json() + "\n")
+            file.write(json.dumps(json_value) + "\n")
         return {"success": True}
     except Exception as e:
+        logging.exception(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 def load_events():
