@@ -154,8 +154,17 @@ async def get_cummulative_history_plot(tz: str):
     for date in df_feeding['date'].unique():
         # Data for feeding events
         df_date = df_feeding[df_feeding['date'] == date].sort_values('hour')
+        zero_points = pd.DataFrame({
+            'date': date,
+            'hour': [0] ,
+            'cumulative_amount': [0] ,
+            'datetime': date  # Ensure these are the earliest points
+        })
 
-        weekday = calendar.day_name[df_date['datetime'].dt.dayofweek.iloc[0]]
+        # Append this to df_feeding
+        df_date = pd.concat([zero_points, df_date], ignore_index=True)
+
+        weekday = calendar.day_name[df_date['datetime'].iloc[-1].dayofweek]
         date_color = day_colors[weekday]  # Get the color for the day
 
         trace = go.Scatter(
