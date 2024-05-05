@@ -104,11 +104,31 @@ def update_data_file(lines, data_file_path):
         raise
 
 
+import calendar
+
+# Define colors for each day of the week
+day_colors = {
+    'Monday': 'blue',
+    'Tuesday': 'green',
+    'Wednesday': 'red',
+    'Thursday': 'cyan',
+    'Friday': 'magenta',
+    'Saturday': 'yellow',
+    'Sunday': 'black'
+}
+
 @app.get("/events/cumulative-history-plot", response_class=HTMLResponse)
 async def get_cummulative_history_plot(tz: str):
     # Create an empty figure
     df = events_dataframe()
     logging.info("Plotting df %s", df.info())
+
+    # Filter for 'poop' events and prepare them
+    df_poop = df[df['event_type'] == 'poop']
+    df_poop['datetime'] = pd.to_datetime(df_poop['timestamp'], unit='s', utc=True).dt.tz_convert(tz)
+    df_poop['date'] = df_poop['datetime'].dt.date
+    df_poop['hour'] = df_poop['datetime'].dt.hour
+    df_poop['minute'] = df_poop['datetime'].dt.minute
 
     # Filter for 'feeding' events
     df_feeding = df[df['event_type'] == 'feeding']
@@ -132,8 +152,44 @@ async def get_cummulative_history_plot(tz: str):
     fig = go.Figure()
 
     for date in df_feeding['date'].unique():
+        # Data for feeding events
         df_date = df_feeding[df_feeding['date'] == date].sort_values('hour')
-        fig.add_trace(go.Scatter(x=df_date['hour'], y=df_date['cumulative_amount'], mode='lines+markers', name=str(date)))
+
+        weekday = calendar.day_name[df_date['datetime'].dt.dayofweek.iloc[0]]
+        date_color = day_colors[weekday]  # Get the color for the day
+
+        trace = go.Scatter(
+            x=df_date['hour'],
+            y=df_date['cumulative_amount'],
+            mode='lines+markers',
+            name=str(date),
+            marker=dict(color=date_color),
+            text=[f"{dt.strftime('%H:%M')} Amount: {amt} oz {note}" for dt, amt, note in zip(df_date['datetime'], df_date['cumulative_amount'], df_date['notes'])],
+            textposition="top center"
+        )
+        fig.add_trace(trace)
+
+        # Poop events for the same date
+        df_date_poop = df_poop[df_poop['date'] == date]
+        for _, poop_event in df_date_poop.iterrows():
+            closest_feed = df_date[df_date.hour <= poop_event['hour']].iloc[-1]
+            next_feed = df_date[df_date.hour > poop_event['hour']].iloc[0]
+            poop_hour = poop_event['hour'] + poop_event['minute']/60
+            pct_next = (poop_hour - closest_feed.hour) / (next_feed.hour - closest_feed.hour)
+            fig.add_annotation(
+                x=poop_hour,  # Precise placement on the x-axis
+                y=closest_feed.cumulative_amount + (pct_next * (next_feed.cumulative_amount-closest_feed.cumulative_amount)),  # Adjust this if you have a baseline for poop markers
+                xref="x",
+                yref="y",
+                text="💩",
+                showarrow=False,
+                arrowhead=7,
+                ax=0,
+                ay=0,  # Adjusts the position of the text relative to the arrow
+                bgcolor=date_color,  # Set background color to match the line color of the date
+                bordercolor="rgba(0,0,0,0)",
+                borderpad=1,  # Adjust padding around text
+            )
 
     fig.update_layout(
         title='Cumulative Feeding Amount by Hour of Day',
