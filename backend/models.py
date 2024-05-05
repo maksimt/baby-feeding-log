@@ -21,7 +21,7 @@ class PoopEvent(Event):
     consistency: str
 
 class SpitUpEvent(Event):
-    volume: str
+    amount_ml: float
 
 def create_event_object(data: dict) -> Event:
     event_type = data.get('event_type')

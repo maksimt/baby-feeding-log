@@ -1,14 +1,16 @@
-version: "3.8"
+version: '3.8'
 services:
-  backend:
-    build:
-      context: ./backend
+  frontend:
+    build: ./frontend
     ports:
-      - "7989:80"
+      - "7988:3000"  # Expose frontend to the host
+    environment:
+      - REACT_APP_BACKEND_URL=http://10.154.71.199:7989  # Use the backend service name
+    depends_on:
+      - backend
+  backend:
+    build: ./backend
+    ports:
+      - "7989:80"  # Expose the port only to linked services
     volumes:
       - ./data:/app/data
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "7988:3000"

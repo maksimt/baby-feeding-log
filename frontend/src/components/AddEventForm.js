@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getEmoji } from '../utils'; // Import the getEmoji function
+import config from '../config';  // Adjust the import path based on your file structure
 
 
 function formatDateToInputString(date) {
@@ -20,7 +21,7 @@ function AddEventForm() {
         notes: '',
         amount_oz: '',  // Initialize as empty string to avoid uncontrolled components
         consistency: '',  // Initialize as empty string to avoid uncontrolled components
-        volume: ''  // Initialize as empty string to avoid uncontrolled components
+        amount_ml: ''  // Initialize as empty string to avoid uncontrolled components
     });
 
     const handleChange = (e) => {
@@ -36,7 +37,7 @@ function AddEventForm() {
                 ...event,
                 amount_oz: '',
                 consistency: '',
-                volume: '',
+                amount_ml: '',
                 [name]: value
             });
         } else {
@@ -53,10 +54,10 @@ function AddEventForm() {
             ...event,
             timestamp: Math.floor(event.timestamp.getTime() / 1000),  // Convert Date object to Unix timestamp
             amount_oz: parseFloat(event.amount_oz),
-            volume: parseFloat(event.volume)
+            amount_ml: parseFloat(event.amount_ml)
         };
 
-        const response = await fetch('http://10.154.71.199:7989/events/', {
+        const response = await fetch(`${config.API_URL}/events/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -109,8 +110,8 @@ function AddEventForm() {
             )}
             {event.event_type === 'spit up' && (
                 <div>
-                    <label htmlFor="volume">Volume:</label>
-                    <input type="text" id="volume" name="volume" value={event.volume || ''} onChange={handleChange} placeholder="Volume" required />
+                    <label htmlFor="amount_ml">amount_ml:</label>
+                    <input type="text" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="amount_ml" required />
                 </div>
             )}
             <div>

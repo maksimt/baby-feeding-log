@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getEmoji } from '../utils'; // Import the getEmoji function
+import config from '../config';  // Adjust the import path based on your file structure
 
 function EventList() {
     const [events, setEvents] = useState({});
@@ -7,7 +8,7 @@ function EventList() {
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const response = await fetch('http://10.154.71.199:7989/events/');
+                const response = await fetch(`${config.API_URL}/events/`);
                 const data = await response.json();
                 const groupedEvents = groupEventsByDate(data);
                 setEvents(groupedEvents);
@@ -66,7 +67,7 @@ function renderEventData(event) {
         case 'poop':
             return `Consistency: ${event.consistency}`;
         case 'spit up':
-            return `Volume: ${event.volume}`;
+            return `Amount: ${event.amount_ml} ml`;
         default:
             return '';
     }
