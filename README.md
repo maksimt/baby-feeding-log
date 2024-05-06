@@ -24,3 +24,8 @@ export REACT_APP_BACKEND_URL=http://$(hostname -I | awk '{print $1}'):7989
 docker-compose up --build -d
 ```
 2. Navigate to `http://$(hostname):7988`.
+
+
+### Credits
+
+Created with a lot of input from Chat GPT!
