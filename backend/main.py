@@ -27,7 +27,7 @@ async def exception_handler(request, exc):
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://10.154.71.199:7988"],  # URL of the frontend
+    allow_origins=["*"],  # anti-pattern; just using this to avoid config
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
