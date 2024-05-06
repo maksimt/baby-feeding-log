@@ -1,3 +1,4 @@
+from argparse import Namespace
 import tempfile
 import shutil
 import os
@@ -182,8 +183,15 @@ async def get_cummulative_history_plot(tz: str):
         # Poop events for the same date
         df_date_poop = df_poop[df_poop['date'] == date]
         for _, poop_event in df_date_poop.iterrows():
-            closest_feed = df_date[df_date.hour <= poop_event['hour']].iloc[-1]
-            next_feed = df_date[df_date.hour > poop_event['hour']].iloc[0]
+            try:
+                closest_feed = df_date[df_date.hour <= poop_event['hour']].iloc[-1]
+            except IndexError:
+                closest_feed = Namespace(cumulative_amount=0, hour=0)
+            try:
+                next_feed = df_date[df_date.hour > poop_event['hour']].iloc[0]
+            except IndexError:
+                next_feed = Namespace(cumulative_amount=closest_feed.cumulative_amount,
+                                      hour=closest_feed.hour+0.25)
             poop_hour = poop_event['hour'] + poop_event['minute']/60
             pct_next = (poop_hour - closest_feed.hour) / (next_feed.hour - closest_feed.hour)
             fig.add_annotation(
