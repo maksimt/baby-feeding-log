@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 
 
@@ -126,11 +127,66 @@ def cumulative_history_plot(tz, df) -> go.Figure:
             )
 
     fig.update_layout(
-        title="Cumulative Feeding Amount by Hour of Day",
         xaxis_title=f"Hour of Day ({tz})",
         yaxis_title="Cumulative Amount (oz)",
         legend_title=f"Date ({tz})",
     )
+    return fig
+
+
+def interpoop_evolution_plot(df, tz) -> pd.DataFrame:
+    add_interpoop_stats(df)
+
+    df = df[(df.event_type == "poop") & (~pd.isna(df["total_oz_since_last_poop"]))]
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True).dt.tz_convert(
+        tz
+    )
+
+    # Create a Plotly graph object figure
+    fig = go.Figure()
+
+    # Add the first trace with x as timestamp and y as time since last poop
+    fig.add_trace(
+        go.Scatter(
+            x=df["timestamp"],
+            y=df["time_since_last_poop"].dt.total_seconds() / 3600,
+            name="Time Since Last Poop (hours)",
+            mode="lines+markers",
+            yaxis="y1",
+        )
+    )
+
+    # Add the second trace with x as timestamp and y as total oz since last poop
+    fig.add_trace(
+        go.Scatter(
+            x=df["timestamp"],
+            y=df["total_oz_since_last_poop"],
+            name="Total Oz Since Last Poop",
+            mode="lines+markers",
+            yaxis="y2",
+        )
+    )
+
+    # Update the layout to support two y-axes
+    fig.update_layout(
+        # title='Poop Timing and Feeding Analysis',
+        xaxis_title=f"Time ({tz})",
+        yaxis=dict(
+            title="Time Since Last Poop (hours)",
+            titlefont=dict(color="#1f77b4"),
+            tickfont=dict(color="#1f77b4"),
+            side="left",
+        ),
+        yaxis2=dict(
+            title="Total Oz Since Last Poop",
+            titlefont=dict(color="#ff7f0e"),
+            tickfont=dict(color="#ff7f0e"),
+            overlaying="y",
+            side="right",
+        ),
+    )
+
     return fig
 
 

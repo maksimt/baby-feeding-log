@@ -1,4 +1,4 @@
-from plots import cumulative_history_plot, add_interpoop_stats
+from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot
 from data_access import (
     DATA_FILE,
     DELETED_INDICATOR,
@@ -90,7 +90,6 @@ async def delete_event(timestamp: str):
         raise HTTPException(status_code=500, detail="Failed to delete event")
 
 
-# Define colors for each day of the week
 @app.get("/events/cumulative-history-plot", response_class=HTMLResponse)
 async def get_cumulative_history_plot(tz: str):
     # Create an empty figure
@@ -101,6 +100,19 @@ async def get_cumulative_history_plot(tz: str):
 
     # You can customize your figure here with data and layout
     html = fig.to_html(include_plotlyjs="cdn", full_html=True)
-    logging.info(f"Generated HTML length: {len(html)} bytes")
+    # Return the HTML representation of the figure
+    return html
+
+
+@app.get("/events/interpoop-evolution-plot", response_class=HTMLResponse)
+async def get_interpoop_evolution_plot(tz: str):
+    # Create an empty figure
+    df = events_dataframe()
+    logging.info("Plotting df %s", df.info())
+
+    fig = interpoop_evolution_plot(df, tz)
+
+    # You can customize your figure here with data and layout
+    html = fig.to_html(include_plotlyjs="cdn", full_html=True)
     # Return the HTML representation of the figure
     return html
