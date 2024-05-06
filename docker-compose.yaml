@@ -12,3 +12,15 @@ services:
       - "7989:80"  # Expose the port only to linked services
     volumes:
       - ./data:/app/data
+  notebook:
+    build: ./notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./backend:/app/backend  # Mount backend code to access it within the notebook
+      - ./data:/app/data  # Mount the same data directory as the backend
+      - ./notebook:/app/notebook
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - PYTHONPATH=/app/backend

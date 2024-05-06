@@ -2,3 +2,5 @@ data/feedings.jsonl
 node_modules
 .DS_Store
 ._.DS_Store
+.ipynb*
+__pycache__*
