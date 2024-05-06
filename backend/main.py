@@ -132,6 +132,7 @@ async def get_cummulative_history_plot(tz: str):
 
     # Filter for 'feeding' events
     df_feeding = df[df['event_type'] == 'feeding']
+    df_feeding["amount_oz"] = df_feeding["amount_oz"].astype(float)
 
     # Convert timestamps to datetime and extract date and hour
     df_feeding['datetime'] = pd.to_datetime(df_feeding['timestamp'], unit='s', utc=True).dt.tz_convert(tz)
