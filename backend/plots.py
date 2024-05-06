@@ -132,3 +132,38 @@ def cumulative_history_plot(tz, df) -> go.Figure:
         legend_title=f"Date ({tz})",
     )
     return fig
+
+
+def add_interpoop_stats(df) -> pd.DataFrame:
+    df["amount_oz"] = pd.to_numeric(df["amount_oz"], errors="coerce")
+
+    # Sort the dataframe by timestamp
+    df.sort_values("timestamp", inplace=True)
+
+    # Initialize a column to store the time since the last poop
+    df["time_since_last_poop"] = pd.NaT
+
+    # Initialize a column to store the total amount_oz since last poop
+    df["total_oz_since_last_poop"] = 0.0
+
+    # Track the last time a poop event occurred and the total ounces consumed
+    last_poop_time = None
+    total_oz = 0.0
+
+    # Iterate through the dataframe
+    for index, row in df.iterrows():
+        if row["event_type"] == "poop":
+            if last_poop_time is not None:
+                df.loc[index, "time_since_last_poop"] = (
+                    row["timestamp"] - last_poop_time
+                )
+                df.loc[index, "total_oz_since_last_poop"] = total_oz
+            last_poop_time = row["timestamp"]
+            total_oz = 0.0  # Reset the total ounces after each poop
+        elif row["event_type"] == "feeding":
+            if pd.notna(row["amount_oz"]):  # Ensure that the amount_oz is not NaN
+                total_oz += row["amount_oz"]
+
+    df["time_since_last_poop"] = pd.to_timedelta(df["time_since_last_poop"], unit="s")
+
+    return df

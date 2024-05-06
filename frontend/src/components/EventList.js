@@ -108,7 +108,7 @@ function renderEventData(event) {
         case 'feeding':
             return `Ate: ${event.amount_oz} oz`;
         case 'poop':
-            return `Consistency: ${event.consistency}`;
+            return `Consistency: ${event.consistency}; Since last 💩: ate ${event.total_oz_since_last_poop} oz, 🕰️ ${event.time_since_last_poop}`;
         case 'spit up':
             return `Spit up: ${event.amount_ml} ml`;
         default:

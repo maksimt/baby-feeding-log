@@ -22,6 +22,8 @@ class FeedingEvent(Event):
 
 class PoopEvent(Event):
     consistency: str
+    time_since_last_poop: str = ""
+    total_oz_since_last_poop: float = float('nan')
 
 
 class SpitUpEvent(Event):

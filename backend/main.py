@@ -1,4 +1,4 @@
-from plots import cumulative_history_plot
+from plots import cumulative_history_plot, add_interpoop_stats
 from data_access import (
     DATA_FILE,
     DELETED_INDICATOR,
@@ -58,7 +58,18 @@ async def create_event(event: Request):
 async def get_events():
     events = load_events()
     # Sort events by timestamp in reverse order and return the first 100
-    return sorted(events, key=lambda x: x.timestamp, reverse=True)[:100]
+    sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)[:100]
+    df_interpoop = add_interpoop_stats(events_dataframe())
+    for e in sorted_events:
+        if e.event_type == "poop":
+            try:
+                interpoop = df_interpoop[df_interpoop.timestamp == e.timestamp].iloc[0]
+            except IndexError:
+                interpoop = None
+            if interpoop is not None:
+                e.time_since_last_poop = str(interpoop.time_since_last_poop)
+                e.total_oz_since_last_poop = interpoop.total_oz_since_last_poop
+    return sorted_events
 
 
 @app.delete("/events/{timestamp}")
