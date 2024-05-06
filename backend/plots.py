@@ -36,6 +36,7 @@ def cumulative_history_plot(tz, df) -> go.Figure:
     ).dt.tz_convert(tz)
     df_feeding["date"] = df_feeding["datetime"].dt.date
     df_feeding["hour"] = df_feeding["datetime"].dt.hour
+    df_feeding["minute"] = df_feeding["datetime"].dt.minute
 
     df_feeding = df_feeding.sort_values(by=["date", "hour"])
 
@@ -59,6 +60,7 @@ def cumulative_history_plot(tz, df) -> go.Figure:
             {
                 "date": date,
                 "hour": [0],
+                "minute": [0],
                 "cumulative_amount": [0],
                 "datetime": date,  # Ensure these are the earliest points
             }
@@ -71,7 +73,7 @@ def cumulative_history_plot(tz, df) -> go.Figure:
         date_color = day_colors[weekday]  # Get the color for the day
 
         trace = go.Scatter(
-            x=df_date["hour"],
+            x=df_date["hour"] + df_date["minute"] / 60,
             y=df_date["cumulative_amount"],
             mode="lines+markers",
             name=str(date),

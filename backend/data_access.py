@@ -7,7 +7,10 @@ import pandas as pd
 
 import json
 
-from models import create_event_object
+try:
+    from models import create_event_object
+except ImportError:
+    pass  # we don't need this in the notebook
 
 DELETED_INDICATOR = "#"
 DATA_FILE = "/app/data/feedings.jsonl"
