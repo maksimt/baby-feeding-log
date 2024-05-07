@@ -7,7 +7,7 @@ from data_access import (
     update_data_file,
 )
 from fastapi import FastAPI, HTTPException, Request
-from models import Event, FeedingEvent, PoopEvent, SpitUpEvent
+from models import *
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 import json
@@ -53,7 +53,19 @@ async def create_event(event: Request):
 
 
 @app.get(
-    "/events/", response_model=List[Union[Event, FeedingEvent, PoopEvent, SpitUpEvent]]
+    "/events/",
+    response_model=List[
+        Union[
+            Event,
+            FeedingEvent,
+            PoopEvent,
+            SpitUpEvent,
+            BreastFeedingEvent,
+            MilestoneEvent,
+            OtherEvent,
+            BathEvent,
+        ]
+    ],
 )
 async def get_events():
     events = load_events()

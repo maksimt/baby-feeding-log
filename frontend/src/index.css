@@ -36,6 +36,24 @@ textarea,
     margin: 5px; */
 }
 
+.sinceLastPoop {
+    color: #5a3e36;
+    /* Brown color reminiscent of chocolate, subtly hinting at the poop theme */
+    background-color: #f0e68c;
+    /* Khaki background for a soft, playful look */
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    /* A widely recognized 'fun' font */
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Soft shadow for a 'popped-out' effect */
+    border: 2px dashed #8b4513;
+    /* Dashed border to keep things light and not too formal */
+    display: inline-block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 /* Larger font sizes for mobile devices */
 @media (max-width: 768px) {
 
