@@ -92,19 +92,19 @@ def cumulative_history_plot(tz, df) -> go.Figure:
         df_date_poop = df_poop[df_poop["date"] == date]
         for _, poop_event in df_date_poop.iterrows():
             try:
-                closest_feed = df_date[df_date.hour <= poop_event["hour"]].iloc[-1]
+                closest_feed = df_date[df_date.datetime <= poop_event["datetime"]].iloc[-1]
             except IndexError:
                 closest_feed = Namespace(cumulative_amount=0, hour=0)
             try:
-                next_feed = df_date[df_date.hour > poop_event["hour"]].iloc[0]
+                next_feed = df_date[df_date.datetime > poop_event["datetime"]].iloc[0]
             except IndexError:
                 next_feed = Namespace(
                     cumulative_amount=closest_feed.cumulative_amount,
                     hour=closest_feed.hour + 0.25,
                 )
             poop_hour = poop_event["hour"] + poop_event["minute"] / 60
-            pct_next = (poop_hour - closest_feed.hour) / (
-                next_feed.hour - closest_feed.hour
+            pct_next = (poop_hour - closest_feed.hour - closest_feed.minute) / (
+                next_feed.hour - closest_feed.hour - closest_feed.minute
             )
             fig.add_annotation(
                 x=poop_hour,  # Precise placement on the x-axis
