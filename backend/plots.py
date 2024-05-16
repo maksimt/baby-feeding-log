@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -92,38 +93,47 @@ def cumulative_history_plot(tz, df) -> go.Figure:
         df_date_poop = df_poop[df_poop["date"] == date]
         for _, poop_event in df_date_poop.iterrows():
             try:
-                closest_feed = df_date[df_date.datetime <= poop_event["datetime"]].iloc[-1]
-            except IndexError:
-                closest_feed = Namespace(cumulative_amount=0, hour=0)
-            try:
-                next_feed = df_date[df_date.datetime > poop_event["datetime"]].iloc[0]
-            except IndexError:
-                next_feed = Namespace(
-                    cumulative_amount=closest_feed.cumulative_amount,
-                    hour=closest_feed.hour + 0.25,
+                try:
+                    closest_feed = df_date[
+                        df_date.hour + df_date.minute / 60
+                        <= poop_event["hour"] + poop_event["hour"] / 60
+                    ].iloc[-1]
+                except IndexError:
+                    closest_feed = Namespace(cumulative_amount=0, hour=0)
+                try:
+                    next_feed = df_date[
+                        df_date.hour + df_date.minute / 60
+                        > poop_event["hour"] + poop_event["hour"] / 60
+                    ].iloc[0]
+                except IndexError:
+                    next_feed = Namespace(
+                        cumulative_amount=closest_feed.cumulative_amount,
+                        hour=closest_feed.hour + 0.25,
+                    )
+                poop_hour = poop_event["hour"] + poop_event["minute"] / 60
+                pct_next = (poop_hour - closest_feed.hour - closest_feed.minute) / (
+                    next_feed.hour - closest_feed.hour - closest_feed.minute
                 )
-            poop_hour = poop_event["hour"] + poop_event["minute"] / 60
-            pct_next = (poop_hour - closest_feed.hour - closest_feed.minute) / (
-                next_feed.hour - closest_feed.hour - closest_feed.minute
-            )
-            fig.add_annotation(
-                x=poop_hour,  # Precise placement on the x-axis
-                y=closest_feed.cumulative_amount
-                + (
-                    pct_next
-                    * (next_feed.cumulative_amount - closest_feed.cumulative_amount)
-                ),  # Adjust this if you have a baseline for poop markers
-                xref="x",
-                yref="y",
-                text="💩",
-                showarrow=False,
-                arrowhead=7,
-                ax=0,
-                ay=0,  # Adjusts the position of the text relative to the arrow
-                bgcolor=date_color,  # Set background color to match the line color of the date
-                bordercolor="rgba(0,0,0,0)",
-                borderpad=1,  # Adjust padding around text
-            )
+                fig.add_annotation(
+                    x=poop_hour,  # Precise placement on the x-axis
+                    y=closest_feed.cumulative_amount
+                    + (
+                        pct_next
+                        * (next_feed.cumulative_amount - closest_feed.cumulative_amount)
+                    ),  # Adjust this if you have a baseline for poop markers
+                    xref="x",
+                    yref="y",
+                    text="💩",
+                    showarrow=False,
+                    arrowhead=7,
+                    ax=0,
+                    ay=0,  # Adjusts the position of the text relative to the arrow
+                    bgcolor=date_color,  # Set background color to match the line color of the date
+                    bordercolor="rgba(0,0,0,0)",
+                    borderpad=1,  # Adjust padding around text
+                )
+            except Exception as e:
+                logging.error(e)
 
     fig.update_layout(
         xaxis_title=f"Hour of Day ({tz})",
