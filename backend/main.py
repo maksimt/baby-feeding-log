@@ -1,3 +1,4 @@
+import uuid
 from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot
 from data_access import (
     DATA_FILE,
@@ -45,6 +46,7 @@ app.add_middleware(
 async def create_event(event: Request):
     try:
         json_value = await event.json()
+        json_value["id"] = str(uuid.uuid4())
         logging.info("Got event %s", json_value)
         with open(DATA_FILE, "a") as file:
             file.write(json.dumps(json_value) + "\n")
