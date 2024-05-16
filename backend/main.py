@@ -14,6 +14,8 @@ import json
 from typing import List, Union
 import logging
 from fastapi import FastAPI, HTTPException
+from typing import Dict, Any
+import json
 
 app = FastAPI()
 
@@ -84,14 +86,14 @@ async def get_events():
     return sorted_events
 
 
-@app.delete("/events/{timestamp}")
-async def delete_event(timestamp: str):
+@app.delete("/events/{id}")
+async def delete_event(id: str):
     try:
         # Attempt to find and remove the event with the given timestamp
         lines = []
         with open(DATA_FILE, "r") as file:
             for line in file:
-                if timestamp in line:
+                if id in line:
                     line = DELETED_INDICATOR + line
                 lines.append(line)
         update_data_file(lines, DATA_FILE)
@@ -100,6 +102,35 @@ async def delete_event(timestamp: str):
         # Log error, handle or raise more specific exceptions as needed
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete event")
+
+
+@app.patch("/events/{id}")
+async def update_event(id: str, updated_event: Request):
+    try:
+        # Load existing events and update the one with the given ID
+        json_value = await updated_event.json()
+        updated = False
+        lines = []
+        with open(DATA_FILE, "r") as file:
+            for line in file:
+                if id in line and not line.startswith(DELETED_INDICATOR):
+                    event = json.loads(line)
+                    # Update the event with new data
+                    for key, value in json_value.items():
+                        if value is not None:
+                            event[key] = value
+                    line = json.dumps(event) + "\n"
+                    updated = True
+                lines.append(line)
+        if updated:
+            update_data_file(lines, DATA_FILE)
+            return {"success": True, "msg": "Event updated"}
+        else:
+            raise HTTPException(status_code=404, detail="Event not found")
+    except Exception as e:
+        # Log error, handle or raise more specific exceptions as needed
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update event")
 
 
 @app.get("/events/cumulative-history-plot", response_class=HTMLResponse)

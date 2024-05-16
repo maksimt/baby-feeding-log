@@ -3,7 +3,7 @@ import { getEmoji } from '../utils';
 import config from '../config';
 
 function confirmDelete(event) {
-    const eventTypeFormatted = event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1);  // Capitalize the first letter
+    const eventTypeFormatted = event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1);
     const eventTime = new Date(event.timestamp * 1000).toLocaleString();
     if (window.confirm(`Are you sure you want to delete this ${eventTypeFormatted} event from ${eventTime}?`)) {
         deleteEvent(event.timestamp);
@@ -34,6 +34,8 @@ function handlePrint() {
 function EventList() {
     const [events, setEvents] = useState({});
     const [lastPoopStats, setLastPoopStats] = useState({ lastPoopTime: null, totalOzSinceLastPoop: 0, totalMinsBreastfeedingSinceLastPoop: 0 });
+    const [editingEvent, setEditingEvent] = useState(null);
+    const [editedEvent, setEditedEvent] = useState({});
 
     useEffect(() => {
         async function fetchEvents() {
@@ -55,7 +57,7 @@ function EventList() {
         if (lastPoop) {
             const now = Date.now();
             const lastPoopTime = new Date(lastPoop.timestamp * 1000);
-            const hoursSinceLastPoop = ((now - lastPoopTime) / (1000 * 60 * 60)).toFixed(1);  // Convert milliseconds to hours and round to one decimal place
+            const hoursSinceLastPoop = ((now - lastPoopTime) / (1000 * 60 * 60)).toFixed(1);
 
             const eventsAfterLastPoop = events.filter(e => e.timestamp > lastPoop.timestamp);
             const totalOzSinceLastPoop = eventsAfterLastPoop.filter(e => e.event_type === 'feeding').reduce((acc, curr) => acc + (curr.amount_oz || 0), 0);
@@ -66,6 +68,40 @@ function EventList() {
                 totalOzSinceLastPoop,
                 totalMinsBreastfeedingSinceLastPoop
             });
+        }
+    }
+
+    function startEditing(event) {
+        setEditingEvent(event);
+        setEditedEvent(event);
+    }
+
+    function handleEditChange(event) {
+        const { name, value } = event.target;
+        setEditedEvent(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+    }
+
+    async function saveEdit() {
+        try {
+            const response = await fetch(`${config.API_URL}/events/${editingEvent.timestamp}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(editedEvent)
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Failed to update event.');
+            }
+        } catch (error) {
+            console.error('Error updating event:', error);
+            alert('Error updating event.');
         }
     }
 
@@ -80,13 +116,26 @@ function EventList() {
                     <ul style={{ listStyleType: 'none' }}>
                         {events[date].map((event, idx) => (
                             <li key={idx} style={{ color: getColor(event.event_type) }}>
-                                <span style={{ display: 'inline' }}>
-                                    {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
-                                    {event.event_type === "milestone" && event.picture_link && <li><img src={event.picture_link} alt="Milestone" style={{ marginLeft: '10px', maxHeight: '300px' }} /></li>}
-                                </span>
-                                <button onClick={() => confirmDelete(event)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', fontSize: '12px' }}>
-                                    X
-                                </button>
+                                {editingEvent && editingEvent.timestamp === event.timestamp ? (
+                                    <div>
+                                        {Object.keys(event).map((key, i) => (
+                                            key !== 'timestamp' && key !== 'event_type' && key !== 'id' && (
+                                                <div key={i}>
+                                                    <label>{key}: </label>
+                                                    <input type="text" name={key} value={editedEvent[key] || ''} onChange={handleEditChange} />
+                                                </div>
+                                            )
+                                        ))}
+                                        <button onClick={saveEdit}>Save</button>
+                                    </div>
+                                ) : (
+                                        <span style={{ display: 'inline' }}>
+                                            {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
+                                            {event.event_type === "milestone" && event.picture_link && <li><img src={event.picture_link} alt="Milestone" style={{ marginLeft: '10px', maxHeight: '300px' }} /></li>}
+                                        </span>
+                                )}
+                                <button onClick={() => startEditing(event)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', fontSize: '12px' }}>✏️</button>
+                                <button onClick={() => confirmDelete(event)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', fontSize: '12px' }}>X</button>
                             </li>
                         ))}
                     </ul>

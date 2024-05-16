@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel, ValidationError, validator, HttpUrl
 
 
@@ -6,6 +5,7 @@ class Event(BaseModel):
     timestamp: int
     event_type: str
     notes: str
+    id: str
 
     @validator("event_type", pre=True, always=True)
     def set_event_type(cls, v):
