@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body>
+    <a href="/">Back Home</a>
+    <video width="100%" id="video" controls></video>
+
+    <script>
+        var video = document.getElementById('video');
+        var sourceUrl = 'http://babymonitor.local:8080/hls/stream.m3u8';
+
+        function setupHls() {
+            if (Hls.isSupported()) {
+                var hls = new Hls({
+                    debug: true,
+                    maxBufferLength: 30, // maximum buffer length in seconds
+                    maxMaxBufferLength: 600, // maximum buffer length in seconds that hls.js will try to reach
+                    maxBufferSize: 60 * 1000 * 1000, // 60 MB, maximum buffer size in bytes
+                    capLevelToPlayerSize: true // adjust the quality to the size of the player
+                });
+
+                hls.loadSource(sourceUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    video.play();
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log("fatal network error encountered, try to recover");
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log("fatal media error encountered, try to recover");
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                console.log("fatal error encountered, destroying hls instance");
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+
+                setInterval(() => {
+                    console.log("Refreshing HLS stream source");
+                    hls.loadSource(sourceUrl);
+                    hls.attachMedia(video);
+                }, 1800000); // refresh every 30 minutes
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = sourceUrl;
+                video.addEventListener('loadedmetadata', function () {
+                    video.play();
+                });
+            }
+        }
+
+        setupHls();
+    </script>
+
+</body>
+
+</html>

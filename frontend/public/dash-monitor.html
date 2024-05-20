@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+</head>
+
+<body>
+
+
+    <link href="https://unpkg.com/video.js/dist/video-js.css" rel="stylesheet">
+
+    <!--
+      -- Include video.js, dash.js, and
+      -- videojs-contrib-dash in your page
+      -->
+    <script src="https://unpkg.com/video.js/dist/video.js"></script>
+    <script src="https://unpkg.com/videojs-contrib-dash/dist/videojs-dash.js"></script>
+
+    <!--
+      -- Now, initialize your player. That's it!
+      -->
+    <video id=example-video width=1280 height=720 class="video-js vjs-default-skin" controls> </video>
+
+    <script>
+        var player = videojs('example-video');
+        player.src({
+            src: 'http://babymonitor.local:8080/dash/stream.mpd',
+            type: 'application/dash+xml',
+        });
+        player.play();
+    </script>
+</body>
+
+</html>
