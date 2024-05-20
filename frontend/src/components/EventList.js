@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getEmoji } from '../utils';
+import { getEmoji, formatDateToInputString, convertUnixTimeToLocalTime } from '../utils';
 import config from '../config';
 
 function confirmDelete(event) {
@@ -77,7 +77,11 @@ function EventList() {
     }
 
     function handleEditChange(event) {
-        const { name, value } = event.target;
+        let { name, value } = event.target;
+        if (name === 'timestamp') {
+            value = new Date(value);
+            value = Math.floor(value.getTime() / 1000);
+        }
         setEditedEvent(prevState => ({
             ...prevState,
             [name]: value
@@ -116,8 +120,19 @@ function EventList() {
                     <ul style={{ listStyleType: 'none' }}>
                         {events[date].map((event, idx) => (
                             <li key={idx} style={{ color: getColor(event.event_type) }}>
-                                {editingEvent && editingEvent.timestamp === event.timestamp ? (
+                                {editingEvent && editingEvent.id === event.id ? (
                                     <div>
+                                        <div>
+                                            <label htmlFor="timestamp">Timestamp:</label>
+                                            <input
+                                                type="datetime-local"
+                                                id="timestamp"
+                                                name="timestamp"
+                                                value={formatDateToInputString(new Date(editedEvent.timestamp * 1000))}
+                                                onChange={handleEditChange}
+                                                required
+                                            />
+                                        </div>
                                         {Object.keys(event).map((key, i) => (
                                             key !== 'timestamp' && key !== 'event_type' && key !== 'id' && (
                                                 <div key={i}>
@@ -164,15 +179,6 @@ function calculateFeedingTotals(events) {
 
 function calculateBreastfeedingMinutes(events) {
     return events.filter(e => e.event_type === 'breastfeeding').reduce((total, curr) => total + (curr.time_left + curr.time_right), 0);
-}
-
-function convertUnixTimeToLocalTime(unixTimestamp) {
-    const date = new Date(unixTimestamp * 1000);
-    return date.toLocaleTimeString('en-US', {
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-    });
 }
 
 function renderEventData(event) {

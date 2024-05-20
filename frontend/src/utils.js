@@ -19,3 +19,22 @@ export function getEmoji(eventType) {
             return '❓'; // Question mark emoji for unknown types
     }
 }
+
+export function formatDateToInputString(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+export function convertUnixTimeToLocalTime(unixTimestamp) {
+    const date = new Date(unixTimestamp * 1000);
+    return date.toLocaleTimeString('en-US', {
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
