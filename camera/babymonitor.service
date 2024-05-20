@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=maks
-Group=maks
+User=root
+Group=root
 Restart=on-failure
 RestartSec=5s
 ExecStart=/usr/bin/ffmpeg \
@@ -22,7 +22,7 @@ ExecStart=/usr/bin/ffmpeg \
   -f dash -seg_duration 2 -streaming 1 -remove_at_exit 1 \
   -use_template 1 -use_timeline 1 \
   -adaptation_sets "id=0,streams=a" \
-  "/dev/shm/dash/stream.mpd"
+  "/var/www/dash/stream.mpd"
 
 [Install]
 WantedBy=multi-user.target
