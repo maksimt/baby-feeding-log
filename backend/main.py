@@ -73,7 +73,8 @@ async def create_event(event: Request):
 )
 async def get_events():
     events = load_events()
-    sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)
+    # Sort events by timestamp in reverse order and return the first 100
+    sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)[:100]
     df_interpoop = add_interpoop_stats(events_dataframe())
     for e in sorted_events:
         if e.event_type == "poop":
