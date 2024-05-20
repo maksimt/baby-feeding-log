@@ -31,7 +31,7 @@ function handlePrint() {
     window.print();
 }
 
-function EventList() {
+function EventList({numberOfEventsToDisplay}) {
     const [events, setEvents] = useState({});
     const [lastPoopStats, setLastPoopStats] = useState({ lastPoopTime: null, totalOzSinceLastPoop: 0, totalMinsBreastfeedingSinceLastPoop: 0 });
     const [editingEvent, setEditingEvent] = useState(null);
@@ -40,7 +40,11 @@ function EventList() {
     useEffect(() => {
         async function fetchEvents() {
             try {
-                const response = await fetch(`${config.API_URL}/events/`);
+                let getUrl = `${config.API_URL}/events/`;
+                if (numberOfEventsToDisplay != -1) {
+                    getUrl = `${getUrl}?limit=${numberOfEventsToDisplay}`
+                }
+                const response = await fetch(getUrl);
                 const data = await response.json();
                 const groupedEvents = groupEventsByDate(data);
                 setEvents(groupedEvents);

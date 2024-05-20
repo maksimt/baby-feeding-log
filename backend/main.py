@@ -14,8 +14,9 @@ from fastapi.responses import HTMLResponse
 import json
 from typing import List, Union
 import logging
-from fastapi import FastAPI, HTTPException
-from typing import Dict, Any
+from fastapi import FastAPI, HTTPException, Query
+
+from typing import List, Union, Optional
 import json
 
 app = FastAPI()
@@ -71,11 +72,21 @@ async def create_event(event: Request):
         ]
     ],
 )
-async def get_events():
+async def get_events(
+    limit: Optional[int] = Query(
+        None, description="Number of most recent events to return"
+    )
+):
     events = load_events()
-    # Sort events by timestamp in reverse order and return the first 100
-    sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)[:100]
+
+    # Sort events by timestamp in reverse order
+    sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)
+
+    if limit:
+        sorted_events = sorted_events[:limit]
+
     df_interpoop = add_interpoop_stats(events_dataframe())
+
     for e in sorted_events:
         if e.event_type == "poop":
             try:
@@ -85,6 +96,7 @@ async def get_events():
             if interpoop is not None:
                 e.time_since_last_poop = str(interpoop.time_since_last_poop)
                 e.total_oz_since_last_poop = interpoop.total_oz_since_last_poop
+
     return sorted_events
 
 
