@@ -1,10 +1,11 @@
-import logging
 import pandas as pd
 import plotly.graph_objects as go
 
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import timedelta
 
-import calendar
-from argparse import Namespace
 
 day_colors = {
     "Monday": "blue",
@@ -17,129 +18,79 @@ day_colors = {
 }
 
 
-def cumulative_history_plot(tz, df) -> go.Figure:
-    # Filter for 'poop' events and prepare them
-    df_poop = df[df["event_type"] == "poop"]
-    df_poop["datetime"] = pd.to_datetime(
-        df_poop["timestamp"], unit="s", utc=True
-    ).dt.tz_convert(tz)
-    df_poop["date"] = df_poop["datetime"].dt.date
-    df_poop["hour"] = df_poop["datetime"].dt.hour
-    df_poop["minute"] = df_poop["datetime"].dt.minute
+def cumulative_history_plot(df, tz="US/Pacific", oz_per_15_minutes_boobs=None):
+    if oz_per_15_minutes_boobs is not None:
+        df.loc[df["event_type"] == "breastfeeding", "amount_oz"] = df[
+            df["event_type"] == "breastfeeding"
+        ].apply(
+            lambda x: (int(x["time_left"]) + int(x["time_right"]))
+            / 15
+            * oz_per_15_minutes_boobs,
+            axis=1,
+        )
+    # Step 1: Filter to include only 'feeding' event_type
+    df = df[df["event_type"].isin(["feeding", "breastfeeding"])]
+    df = df.sort_values(by="timestamp", ascending=True)
 
-    # Filter for 'feeding' events
-    df_feeding = df[df["event_type"] == "feeding"]
-    df_feeding["amount_oz"] = df_feeding["amount_oz"].astype(float)
+    # Step 2: Convert timestamp to datetime and extract date
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True).dt.tz_convert(
+        tz
+    )
+    df["date"] = df["timestamp"].dt.date
+    df["hour_of_day"] = df["timestamp"].dt.hour + df["timestamp"].dt.minute / 60
 
-    # Convert timestamps to datetime and extract date and hour
-    df_feeding["datetime"] = pd.to_datetime(
-        df_feeding["timestamp"], unit="s", utc=True
-    ).dt.tz_convert(tz)
-    df_feeding["date"] = df_feeding["datetime"].dt.date
-    df_feeding["hour"] = df_feeding["datetime"].dt.hour
-    df_feeding["minute"] = df_feeding["datetime"].dt.minute
+    # Step 3: Filter to include only the most recent 7 days
+    end_date = df["date"].max()
+    start_date = end_date - timedelta(days=6)
+    df = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
 
-    df_feeding = df_feeding.sort_values(by=["date", "hour"])
+    # Step 4: Calculate cumulative amount_oz for each day
+    df["amount_oz"] = pd.to_numeric(df["amount_oz"], errors="coerce")
+    df = df.dropna(subset=["amount_oz"])
 
-    # Group by date and hour, then calculate the cumulative sum of amount_oz
-    df_feeding["cumulative_amount"] = df_feeding.groupby(["date"])["amount_oz"].cumsum()
+    df["cumulative_amount_oz"] = df.groupby("date")["amount_oz"].cumsum()
 
-    # Filter for the most recent 7 days
-    max_date = df_feeding["date"].max()
-    min_date = max_date - pd.Timedelta(days=6)
-    df_feeding = df_feeding[
-        (df_feeding["date"] >= min_date) & (df_feeding["date"] <= max_date)
-    ]
-
-    # Create a plot
+    # Step 5: Plot the data using Plotly
     fig = go.Figure()
+    colors = px.colors.qualitative.Plotly
+    event_type_to_marker = {"feeding": "circle", "breastfeeding": "star"}
+    df["marker_symbol"] = df["event_type"].map(event_type_to_marker)
 
-    for date in df_feeding["date"].unique():
-        # Data for feeding events
-        df_date = df_feeding[df_feeding["date"] == date].sort_values("hour")
-        zero_points = pd.DataFrame(
-            {
-                "date": date,
-                "hour": [0],
-                "minute": [0],
-                "cumulative_amount": [0],
-                "datetime": date,  # Ensure these are the earliest points
-            }
-        )
-
-        # Append this to df_feeding
-        df_date = pd.concat([zero_points, df_date], ignore_index=True)
-
-        weekday = calendar.day_name[df_date["datetime"].iloc[-1].dayofweek]
-        date_color = day_colors[weekday]  # Get the color for the day
-
-        trace = go.Scatter(
-            x=df_date["hour"] + df_date["minute"] / 60,
-            y=df_date["cumulative_amount"],
-            mode="lines+markers",
-            name=str(date),
-            marker=dict(color=date_color),
-            text=[
-                f"{dt.strftime('%H:%M')} Amount: {amt} oz {note}"
-                for dt, amt, note in zip(
-                    df_date["datetime"], df_date["cumulative_amount"], df_date["notes"]
-                )
+    for i, (date, group) in enumerate(df.groupby("date")):
+        group = pd.concat(
+            [
+                pd.DataFrame(
+                    {
+                        "hour_of_day": [0],
+                        "cumulative_amount_oz": [0],
+                        "marker_symbol": "circle",
+                    }
+                ),
+                group,
             ],
-            textposition="top center",
+            ignore_index=True,
         )
-        fig.add_trace(trace)
-
-        # Poop events for the same date
-        df_date_poop = df_poop[df_poop["date"] == date]
-        for _, poop_event in df_date_poop.iterrows():
-            try:
-                try:
-                    closest_feed = df_date[
-                        df_date.hour + df_date.minute / 60
-                        <= poop_event["hour"] + poop_event["hour"] / 60
-                    ].iloc[-1]
-                except IndexError:
-                    closest_feed = Namespace(cumulative_amount=0, hour=0)
-                try:
-                    next_feed = df_date[
-                        df_date.hour + df_date.minute / 60
-                        > poop_event["hour"] + poop_event["hour"] / 60
-                    ].iloc[0]
-                except IndexError:
-                    next_feed = Namespace(
-                        cumulative_amount=closest_feed.cumulative_amount,
-                        hour=closest_feed.hour + 0.25,
-                    )
-                poop_hour = poop_event["hour"] + poop_event["minute"] / 60
-                pct_next = (poop_hour - closest_feed.hour - closest_feed.minute) / (
-                    next_feed.hour - closest_feed.hour - closest_feed.minute
-                )
-                fig.add_annotation(
-                    x=poop_hour,  # Precise placement on the x-axis
-                    y=closest_feed.cumulative_amount
-                    + (
-                        pct_next
-                        * (next_feed.cumulative_amount - closest_feed.cumulative_amount)
-                    ),  # Adjust this if you have a baseline for poop markers
-                    xref="x",
-                    yref="y",
-                    text="💩",
-                    showarrow=False,
-                    arrowhead=7,
-                    ax=0,
-                    ay=0,  # Adjusts the position of the text relative to the arrow
-                    bgcolor=date_color,  # Set background color to match the line color of the date
-                    bordercolor="rgba(0,0,0,0)",
-                    borderpad=1,  # Adjust padding around text
-                )
-            except Exception as e:
-                logging.error(e)
+        fig.add_trace(
+            go.Scatter(
+                x=group["hour_of_day"],
+                y=group["cumulative_amount_oz"],
+                mode="lines+markers",
+                name=str(date),
+                line=dict(color=colors[i % len(colors)]),
+                marker=dict(
+                    symbol=group["marker_symbol"], color=colors[i % len(colors)]
+                ),
+            )
+        )
 
     fig.update_layout(
+        title="Cumulative Feeding Amount Over Time",
         xaxis_title=f"Hour of Day ({tz})",
-        yaxis_title="Cumulative Amount (oz)",
-        legend_title=f"Date ({tz})",
+        yaxis_title="Cumulative Amount Eaten (oz)",
+        xaxis=dict(tickformat="%H:%M"),
+        legend_title="Date",
     )
+
     return fig
 
 

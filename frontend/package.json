@@ -1,21 +1,33 @@
 {
-    "name": "frontend",
-    "version": "1.0.0",
-    "private": true,
-    "dependencies": {
-        "dashjs": "^4.7.4",
-        "hls": "0.0.1",
-        "react": "^17.0.2",
-        "react-device-detect": "^2.2.3",
-        "react-dom": "^17.0.2",
-        "react-hls-player": "^3.0.7",
-        "react-router-dom": "^6.23.0",
-        "react-scripts": "4.0.3"
-    },
-    "scripts": {
-        "start": "react-scripts start",
-        "build": "react-scripts build",
-        "test": "react-scripts test",
-        "eject": "react-scripts eject"
-    }
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "dashjs": "^4.7.4",
+    "hls": "0.0.1",
+    "react": "^17.0.2",
+    "react-device-detect": "^2.2.3",
+    "react-dom": "^17.0.2",
+    "react-hls-player": "^3.0.7",
+    "react-router-dom": "^6.23.0",
+    "react-scripts": "4.0.3"
+  },
+  "scripts": {
+    "start": "REACT_APP_BACKEND_URL=http://10.154.71.199:7989 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

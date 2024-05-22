@@ -12,6 +12,8 @@ ExecStart=/usr/bin/ffmpeg \
   -f v4l2 -i /dev/video0 \
   -f alsa -i hw:0 \
   -c:v libx264 -preset superfast -maxrate 1000k -bufsize 2000k \
+  -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSans.ttf: \
+text='%{localtime}': fontcolor=white@0.8: x=7: y=50" \
   -pix_fmt yuv420p -g 25 \
   -c:a aac -b:a 160k -ac 2 -ar 44100 \
   -af "bandpass=f=120:width_type=h:w=700" \

@@ -148,12 +148,12 @@ async def update_event(id: str, updated_event: Request):
 
 
 @app.get("/events/cumulative-history-plot", response_class=HTMLResponse)
-async def get_cumulative_history_plot(tz: str):
+async def get_cumulative_history_plot(tz: str, milkOz: float):
     # Create an empty figure
     df = events_dataframe()
     logging.info("Plotting df %s", df.info())
 
-    fig = cumulative_history_plot(tz, df)
+    fig = cumulative_history_plot(tz=tz, oz_per_15_minutes_boobs=milkOz, df=df)
 
     # You can customize your figure here with data and layout
     html = fig.to_html(include_plotlyjs="cdn", full_html=True)
