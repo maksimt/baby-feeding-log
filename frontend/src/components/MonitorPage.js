@@ -58,6 +58,7 @@ function MonitorPage() {
 
     const restartWebcam = async () => {
         try {
+            setStatusIcon('⏳')
             const response = await fetch('http://babymonitor.local:8123/webcam/restart', {
                 method: 'POST'
             });
