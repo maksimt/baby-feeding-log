@@ -1,0 +1,17 @@
+[Unit]
+Description=Webcam API Service
+After=network.target
+
+[Service]
+User=maks
+Group=maks
+WorkingDirectory=/home/maks/davey-log/restart-service
+ExecStart=/usr/bin/python3 /home/maks/davey-log/restart-service/main.py
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=webcam-api
+
+[Install]
+WantedBy=multi-user.target
