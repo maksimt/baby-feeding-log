@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 import pandas as pd
+from plotly.subplots import make_subplots
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import timedelta
@@ -20,6 +21,7 @@ day_colors = {
 
 def cumulative_history_plot(df, tz="US/Pacific", oz_per_15_minutes_boobs=None):
     if oz_per_15_minutes_boobs is not None:
+        df.fillna(0.0, inplace=True)
         df.loc[df["event_type"] == "breastfeeding", "amount_oz"] = df[
             df["event_type"] == "breastfeeding"
         ].apply(
@@ -201,4 +203,188 @@ def weight_plot(df, tz) -> go.Figure:
         plot_bgcolor='white',  # Set plot background color to white
         height=600,
     )
+    return fig
+
+
+def sleep_time_plot(df, tz, oz_per_15_minutes_boobs=None) -> go.Figure:
+
+    for col in ["amount_oz", "time_left", "time_right"]:
+        df[col] = pd.to_numeric(df[col])
+
+    if oz_per_15_minutes_boobs is not None:
+        df.fillna(0.0, inplace=True)
+        df.loc[df["event_type"] == "breastfeeding", "amount_oz"] = df[
+            df["event_type"] == "breastfeeding"
+        ].apply(
+            lambda x: (int(x["time_left"]) + int(x["time_right"]))
+            / 15
+            * oz_per_15_minutes_boobs,
+            axis=1,
+        )
+    else:
+        df.loc[df["event_type"] == "breastfeeding", "amount_oz"] = (
+            0.0  # just have to be some number
+        )
+
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True).dt.tz_convert(
+        tz
+    )
+
+    # Step 1: Filter to include only 'feeding' and 'breastfeeding' event types
+    df = df[df["event_type"].isin(["feeding", "breastfeeding"])]
+    df = df[~df.amount_oz.isna()]
+    df = df.sort_values(by="timestamp", ascending=True)
+
+    # Create a new column to mark starting events
+    df["is_starting_event"] = (
+        df["timestamp"] - df["timestamp"].shift(1)
+    ) > pd.Timedelta(minutes=60)
+
+    # Forward fill the starting event markers to group events
+    df["group"] = df["is_starting_event"].cumsum()
+
+    # Group by the 'group' column and aggregate the data
+    df = (
+        df.groupby("group")
+        .agg(
+            {
+                "timestamp": "first",
+                "event_type": "first",
+                "notes": "first",
+                "amount_oz": "sum",
+                "id": "first",
+                "consistency": "first",
+                "amount_ml": "first",
+                "time_left": "first",
+                "time_right": "first",
+                "description": "first",
+                "picture_link": "first",
+                "picture_links": "first",
+                "time_since_last_poop": "first",
+                "total_oz_since_last_poop": "first",
+                "weight_kg": "first",
+                "weight_lbs": "first",
+            }
+        )
+        .reset_index(drop=True)
+    )
+
+    def event_times_by_day(df):
+        # Ensure the DataFrame is sorted by timestamp
+        df = df.sort_values(by="timestamp")
+
+        # Add a date column for grouping
+        df["date"] = df["timestamp"].dt.date
+
+        # Group by date and calculate the required times
+        result = (
+            df.groupby("date")
+            .agg(
+                last_event_time=("timestamp", "last"),
+                first_event_time=("timestamp", "first"),
+                second_event_time=(
+                    "timestamp",
+                    lambda x: x.iloc[1] if len(x) > 1 else pd.NaT,
+                ),
+            )
+            .reset_index()
+        )
+
+        return result
+
+    def calculate_intervals(df):
+        event_times = event_times_by_day(df)
+
+        last_to_first_list = [pd.NaT]
+        first_to_second_list = [pd.NaT]
+
+        for i in range(1, len(event_times)):
+            yday = event_times.iloc[i - 1]
+            today = event_times.iloc[i]
+
+            # Calculate time from last event on current day to first event on next day
+            last_event_yday = yday["last_event_time"]
+            first_event_today = today["first_event_time"]
+            first_sleep_time = first_event_today - last_event_yday
+
+            # Calculate time from first event to second event on current day
+            first_event_today = today["first_event_time"]
+            second_event_today = today["second_event_time"]
+            if pd.notnull(second_event_today):
+                second_sleep_time = second_event_today - first_event_today
+            else:
+                second_sleep_time = pd.NaT
+
+            last_to_first_list.append(first_sleep_time)
+            first_to_second_list.append(second_sleep_time)
+
+        event_times["last_to_first"] = last_to_first_list
+        event_times["first_to_second"] = first_to_second_list
+
+        return event_times[["date", "last_to_first", "first_to_second"]]
+
+    # Assuming 'df' is your DataFrame
+    intervals_df = calculate_intervals(df)
+    # Convert Timedelta columns to hours for plotting
+    intervals_df["last_to_first_hours"] = (
+        intervals_df["last_to_first"].dt.total_seconds() / 3600
+    )
+    intervals_df["first_to_second_hours"] = (
+        intervals_df["first_to_second"].dt.total_seconds() / 3600
+    )
+
+    # Calculate total amount_oz for each day
+    total_amount_oz_per_day = (
+        df.groupby(df["timestamp"].dt.date)["amount_oz"].sum().reset_index()
+    )
+    total_amount_oz_per_day.columns = ["date", "total_amount_oz"]
+
+    # Merge the intervals_df with the total_amount_oz_per_day
+    intervals_df = pd.merge(
+        intervals_df, total_amount_oz_per_day, on="date", how="left"
+    )
+
+    # Create the plot with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add last_to_first and first_to_second lines
+    fig.add_trace(
+        go.Scatter(
+            x=intervals_df["date"],
+            y=intervals_df["last_to_first_hours"],
+            name="Last to First (hours)",
+            mode="lines+markers",
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=intervals_df["date"],
+            y=intervals_df["first_to_second_hours"],
+            name="First to Second (hours)",
+            mode="lines+markers",
+        ),
+        secondary_y=False,
+    )
+
+    # Add total_amount_oz line
+    fig.add_trace(
+        go.Scatter(
+            x=intervals_df["date"] + pd.Timedelta("1d"),
+            y=intervals_df["total_amount_oz"],
+            name="Prev day total eaten (oz)",
+            line=dict(dash="dot"),
+            mode="lines+markers",
+        ),
+        secondary_y=True,
+    )
+
+    #
+
+    fig.update_xaxes(title_text="Date")
+
+    fig.update_yaxes(title_text="Duration (hours)", secondary_y=False)
+    fig.update_yaxes(title_text="Prev day total eaten (oz)", secondary_y=True)
+
     return fig
