@@ -160,7 +160,7 @@ function EventList({ numberOfEventsToDisplay }) {
                                                 </div>
                                             )
                                         ))}
-                                        <div>
+                                        {(event.event_type === 'milestone' && <div>
                                             <label htmlFor="editImages">Upload Images:</label>
                                             <input
                                                 type="file"
@@ -170,7 +170,7 @@ function EventList({ numberOfEventsToDisplay }) {
                                                 multiple
                                                 onChange={handleEditImageChange}
                                             />
-                                        </div>
+                                        </div>)}
                                         <button onClick={saveEdit}>Save</button>
                                     </div>
                                 ) : (

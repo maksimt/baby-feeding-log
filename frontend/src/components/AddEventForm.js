@@ -135,6 +135,15 @@ function AddEventForm() {
             )}
             {event.event_type === 'milestone' && (
                 <div>
+                    <label htmlFor="images">Upload Images:</label>
+                    <input
+                        type="file"
+                        id="images"
+                        name="images"
+                        accept="image/png, image/jpeg"
+                        multiple
+                        onChange={handleImageChange}
+                    />
                     <label htmlFor="description">Description:</label>
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
                 </div>
@@ -155,17 +164,6 @@ function AddEventForm() {
             <div>
                 <label htmlFor="notes">Notes:</label>
                 <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
-            </div>
-            <div>
-                <label htmlFor="images">Upload Images:</label>
-                <input
-                    type="file"
-                    id="images"
-                    name="images"
-                    accept="image/png, image/jpeg"
-                    multiple
-                    onChange={handleImageChange}
-                />
             </div>
             <button type="submit">Add Event</button>
         </form>
