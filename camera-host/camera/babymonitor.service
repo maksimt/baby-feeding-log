@@ -6,25 +6,21 @@ After=network.target
 Type=simple
 User=root
 Group=root
-Restart=on-failure
+Restart=always
 RestartSec=5s
+TimeoutStopSec=5s
+KillMode=control-group
+
 ExecStart=/usr/bin/ffmpeg \
-  -f v4l2 -i /dev/video0 \
   -f alsa -i hw:0 \
-  -c:v libx264 -preset superfast -maxrate 1000k -bufsize 2000k \
-  -vf "drawtext=fontfile=/usr/share/fonts/truetype/freefont/FreeSans.ttf: \
-text='%{localtime}': fontcolor=white@0.8: x=7: y=50" \
-  -pix_fmt yuv420p -g 25 \
   -c:a aac -b:a 160k -ac 2 -ar 44100 \
   -af "bandpass=f=120:width_type=h:w=700" \
-  -map 0:v -map 1:a \
-  -f hls -hls_time 2 -hls_segment_filename "/var/www/hls/segment%%d.ts" \
-  -hls_list_size 150 -hls_flags delete_segments "/var/www/hls/stream.m3u8" \
-  -map 1:a \
+  -map 0:a \
   -f dash -seg_duration 2 -streaming 1 -remove_at_exit 1 \
   -use_template 1 -use_timeline 1 \
   -adaptation_sets "id=0,streams=a" \
   "/var/www/dash/stream.mpd"
+
 
 [Install]
 WantedBy=multi-user.target

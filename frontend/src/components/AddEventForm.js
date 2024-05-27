@@ -134,7 +134,7 @@ function AddEventForm({ defaultEventType }) {
                     <option value="bath">{getEmoji("bath")} Bath</option>
                     <option value="milestone">{getEmoji("milestone")} Milestone</option>
                     <option value="weight_recorded">{getEmoji("weight_recorded")} Weight Recorded</option>
-                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Feeding Data Recorded for Day</option>
+                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Data</option>
                     <option value="other">{getEmoji("other")} Other</option>
                 </select>
             </div>

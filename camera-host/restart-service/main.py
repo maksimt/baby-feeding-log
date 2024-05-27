@@ -22,10 +22,28 @@ app.add_middleware(
 async def restart_webcam_service():
     try:
         # Run the system command to restart the webcam service
-        result = run(["sudo", "systemctl", "restart", "babymonitor.service"], check=True, capture_output=True, text=True)
-        return {"status": "success", "message": "Webcam service restarted successfully", "output": result.stdout}
+        result = run(
+            ["sudo", "systemctl", "restart", "babymonitor.service"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        result = run(
+            ["sudo", "systemctl", "restart", "motioneye.service"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return {
+            "status": "success",
+            "message": "Webcam service restarted successfully",
+            "output": result.stdout,
+        }
     except CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to restart webcam service: {e.stderr}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to restart webcam service: {e.stderr}"
+        )
+
 
 @app.get("/webcam/")
 async def webcam_status():
@@ -40,28 +58,43 @@ async def webcam_status():
                 break
         return {"status": success, "logs": logs}
     except CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get status of webcam service: {e.stderr}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get status of webcam service: {e.stderr}",
+        )
 
-def get_service_logs(service_name='babymonitor.service', lines=20):
+
+def get_service_logs(service_name="babymonitor.service", lines=20):
     # Use subprocess to run the journalctl command
-    result = subprocess.run(['journalctl', '-u', service_name, '-n', str(lines)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    
+    result = subprocess.run(
+        ["journalctl", "-u", service_name, "-n", str(lines)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
     if result.returncode == 0:
         return result.stdout
     else:
         return f"Failed to get logs: {result.stderr}"
 
 
-def is_service_active(service_name='babymonitor.service') -> bool:
-    result = subprocess.run(['systemctl', 'is-active', service_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+def is_service_active(service_name="babymonitor.service") -> bool:
+    result = subprocess.run(
+        ["systemctl", "is-active", service_name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
     if result.returncode == 0:
-        return result.stdout.strip() == 'active'
+        return result.stdout.strip() == "active"
     else:
         return False
+
 
 # Other routes and logic...
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8123)
 
+    uvicorn.run(app, host="0.0.0.0", port=8123)

@@ -70,7 +70,7 @@ function MonitorPage() {
                 alert('Webcam service restarted successfully');
                 setTimeout(() => {
                     window.location.reload();
-                }, 5000); // Wait 5 seconds before reloading the page
+                }, 1000); // Wait 5 seconds before reloading the page
             } else {
                 alert('Failed to restart webcam service');
             }
@@ -103,7 +103,7 @@ function MonitorPage() {
             <div style={{ top: '10px', left: '10px', fontSize: '24px' }}>
                 {statusIcon}
                 <VideoPlayer src={streamUrl} type={streamType} />
-                <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio</button>
+                <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio + Video</button>
             </div>
 
             <iframe src="http://babymonitor.local:9081" frameborder="0" width="100%"
