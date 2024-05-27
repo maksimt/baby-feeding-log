@@ -32,10 +32,10 @@ const VideoPlayer = ({ src, type }) => {
                     autoPlay={true}
                     controls={true}
                     width="100%"
-                    height="auto"
+                    height="20px"
                 />
             ) : (
-                <video ref={videoRef} autoPlay controls style={{ width: '100%', height: 'auto' }} />
+                    <video ref={videoRef} autoPlay controls style={{ width: '100%', height: '50px' }} />
             )}
         </div>
     );
@@ -44,6 +44,7 @@ const VideoPlayer = ({ src, type }) => {
 function MonitorPage() {
     const hlsStreamUrl = "http://babymonitor.local:8080/hls/stream.m3u8";
     const dashStreamUrl = "http://babymonitor.local:8080/dash/stream.mpd";
+    let isAndroid = true;
     const streamUrl = isAndroid ? dashStreamUrl : hlsStreamUrl;
     const streamType = isAndroid ? 'dash' : 'hls';
 
@@ -97,11 +98,14 @@ function MonitorPage() {
 
     return (
         <div>
-            <div style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '24px' }}>
+            <div style={{ top: '10px', left: '10px', fontSize: '24px' }}>
                 {statusIcon}
+                <VideoPlayer src={streamUrl} type={streamType} />
+                <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio</button>
             </div>
-            <VideoPlayer src={streamUrl} type={streamType} />
-            <button onClick={restartWebcam} style={{ marginTop: '20px' }}>Restart Webcam</button>
+
+            <iframe src="http://babymonitor.local:9081" frameborder="0" width="100%"
+                height="720px" allowfullscreen></iframe>
         </div>
     );
 }
