@@ -55,7 +55,7 @@ function MonitorPage() {
     const [restartAttempted, setRestartAttempted] = React.useState(false);
 
     React.useEffect(() => {
-        const intervalId = setInterval(checkWebcamStatus, 5000); // Check status every 1 second
+        const intervalId = setInterval(checkWebcamStatus, 1000); // Check status every 1 second
 
         return () => clearInterval(intervalId); // Clean up interval on component unmount
     }, []);
@@ -87,15 +87,14 @@ function MonitorPage() {
                 setStatusIcon('🟢');
             } else {
                 setStatusIcon('🔴');
-                if (!restartAttempted) {
-                    setRestartAttempted(true);
-                    restartWebcam(); // Restart the webcam if the status check fails
-                }
+                alert('Please restart the audio stream.')
             }
         } catch (error) {
             console.error('Error checking webcam status:', error);
+
             setStatusIcon('🔴');
-            restartWebcam(); // Restart the webcam if the status check fails
+            alert('Please restart the audio stream.')
+
         }
     };
 
