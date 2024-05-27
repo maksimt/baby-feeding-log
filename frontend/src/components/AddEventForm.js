@@ -13,8 +13,9 @@ function AddEventForm() {
         time_left: '',
         time_right: '',
         description: '',
-        picture_link: ''
+        picture_links: [] // Update to hold multiple picture links
     });
+    const [images, setImages] = useState([]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,12 +30,16 @@ function AddEventForm() {
                 time_left: '',
                 time_right: '',
                 description: '',
-                picture_link: '',
+                picture_links: [],
                 [name]: value
             });
         } else {
             setEvent({ ...event, [name]: value });
         }
+    };
+
+    const handleImageChange = (e) => {
+        setImages([...e.target.files]);
     };
 
     const handleSubmit = async (e) => {
@@ -66,6 +71,17 @@ function AddEventForm() {
 
         const data = await response.json();
         if (data.success) {
+            const { event_id } = data;
+            if (images.length > 0) {
+                const formData = new FormData();
+                images.forEach((image, index) => {
+                    formData.append('images', image);
+                });
+                await fetch(`${config.API_URL}/events/${event_id}/images`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
             window.location.reload();
         } else {
             alert(`Failed to add event: ${data.message}`);
@@ -114,15 +130,13 @@ function AddEventForm() {
             {event.event_type === 'poop' && (
                 <div>
                     <label htmlFor="consistency">Consistency:</label>
-                    <input type="text" id="consistency" name="consistency" value={event.consistency || ''} onChange={handleChange} placeholder="Consistency" required />
+                    <input type="text" id="consistency" name="consistency" value={event.consistency || ''} onChange={handleChange} placeholder="Consistency" />
                 </div>
             )}
             {event.event_type === 'milestone' && (
                 <div>
                     <label htmlFor="description">Description:</label>
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
-                    <label htmlFor="picture_link">Picture Link:</label>
-                    <input type="url" id="picture_link" name="picture_link" value={event.picture_link} onChange={handleChange} placeholder="Picture URL" />
                 </div>
             )}
             {event.event_type === 'other' && (
@@ -141,6 +155,17 @@ function AddEventForm() {
             <div>
                 <label htmlFor="notes">Notes:</label>
                 <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
+            </div>
+            <div>
+                <label htmlFor="images">Upload Images:</label>
+                <input
+                    type="file"
+                    id="images"
+                    name="images"
+                    accept="image/png, image/jpeg"
+                    multiple
+                    onChange={handleImageChange}
+                />
             </div>
             <button type="submit">Add Event</button>
         </form>

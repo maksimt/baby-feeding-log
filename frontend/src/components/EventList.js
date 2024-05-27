@@ -31,11 +31,12 @@ function handlePrint() {
     window.print();
 }
 
-function EventList({numberOfEventsToDisplay}) {
+function EventList({ numberOfEventsToDisplay }) {
     const [events, setEvents] = useState({});
     const [lastPoopStats, setLastPoopStats] = useState({ lastPoopTime: null, totalOzSinceLastPoop: 0, totalMinsBreastfeedingSinceLastPoop: 0 });
     const [editingEvent, setEditingEvent] = useState(null);
     const [editedEvent, setEditedEvent] = useState({});
+    const [editImages, setEditImages] = useState([]);
 
     useEffect(() => {
         async function fetchEvents() {
@@ -92,6 +93,10 @@ function EventList({numberOfEventsToDisplay}) {
         }));
     }
 
+    function handleEditImageChange(event) {
+        setEditImages([...event.target.files]);
+    }
+
     async function saveEdit() {
         try {
             const response = await fetch(`${config.API_URL}/events/${editingEvent.timestamp}`, {
@@ -103,6 +108,16 @@ function EventList({numberOfEventsToDisplay}) {
             });
             const data = await response.json();
             if (data.success) {
+                if (editImages.length > 0) {
+                    const formData = new FormData();
+                    editImages.forEach((image, index) => {
+                        formData.append('images', image);
+                    });
+                    await fetch(`${config.API_URL}/events/${editingEvent.id}/images`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
                 window.location.reload();
             } else {
                 alert('Failed to update event.');
@@ -138,20 +153,37 @@ function EventList({numberOfEventsToDisplay}) {
                                             />
                                         </div>
                                         {Object.keys(event).map((key, i) => (
-                                            key !== 'timestamp' && key !== 'event_type' && key !== 'id' && (
+                                            key !== 'timestamp' && key !== 'event_type' && key !== 'id' && key !== 'picture_links' && (
                                                 <div key={i}>
                                                     <label>{key}: </label>
                                                     <input type="text" name={key} value={editedEvent[key] || ''} onChange={handleEditChange} />
                                                 </div>
                                             )
                                         ))}
+                                        <div>
+                                            <label htmlFor="editImages">Upload Images:</label>
+                                            <input
+                                                type="file"
+                                                id="editImages"
+                                                name="editImages"
+                                                accept="image/png, image/jpeg"
+                                                multiple
+                                                onChange={handleEditImageChange}
+                                            />
+                                        </div>
                                         <button onClick={saveEdit}>Save</button>
                                     </div>
                                 ) : (
-                                        <span style={{ display: 'inline' }}>
-                                            {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
-                                            {event.event_type === "milestone" && event.picture_link && <li><img src={event.picture_link} alt="Milestone" style={{ marginLeft: '10px', maxHeight: '300px' }} /></li>}
-                                        </span>
+                                    <span style={{ display: 'inline' }}>
+                                        {getEmoji(event.event_type)} {convertUnixTimeToLocalTime(event.timestamp)} | {renderEventData(event)} | {event.notes}
+                                        {event.picture_links && event.picture_links.length > 0 && (
+                                            <div>
+                                                {event.picture_links.map((link, i) => (
+                                                    <img key={i} src={link.startsWith('http') ? link : `${config.API_URL}${link}`} alt={`Event ${i}`} style={{ marginLeft: '10px', maxHeight: '300px' }} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </span>
                                 )}
                                 <button onClick={() => startEditing(event)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', fontSize: '12px' }}>✏️</button>
                                 <button onClick={() => confirmDelete(event)} style={{ display: 'inline', color: '#ff5c33', border: 'none', background: 'none', cursor: 'pointer', marginLeft: '10px', fontSize: '12px' }}>X</button>

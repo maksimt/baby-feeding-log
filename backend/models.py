@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel, ValidationError, validator, HttpUrl
 
 
@@ -6,6 +7,7 @@ class Event(BaseModel):
     event_type: str
     notes: str
     id: str
+    picture_links: List[str] = []
 
     @validator("event_type", pre=True, always=True)
     def set_event_type(cls, v):
