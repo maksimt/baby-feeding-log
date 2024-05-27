@@ -1,7 +1,7 @@
 import uuid
 import os
 from pathlib import Path
-from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot, weight_plot
+from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot, sleep_time_plot, weight_plot
 from data_access import (
     DATA_FILE,
     DELETED_INDICATOR,
@@ -219,5 +219,14 @@ async def get_weight_plot(tz: str):
     df = events_dataframe()
 
     fig = weight_plot(df, tz)
+    html = fig.to_html(include_plotlyjs="cdn", full_html=True)
+    return html
+
+
+@app.get("/events/sleep-plot", response_class=HTMLResponse)
+async def get_sleep_plot(tz: str, milkOz: float):
+    df = events_dataframe()
+
+    fig = sleep_time_plot(df, tz, oz_per_15_minutes_boobs=milkOz)
     html = fig.to_html(include_plotlyjs="cdn", full_html=True)
     return html
