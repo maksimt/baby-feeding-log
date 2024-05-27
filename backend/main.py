@@ -1,7 +1,7 @@
 import uuid
 import os
 from pathlib import Path
-from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot
+from plots import cumulative_history_plot, add_interpoop_stats, interpoop_evolution_plot, weight_plot
 from data_access import (
     DATA_FILE,
     DELETED_INDICATOR,
@@ -211,5 +211,13 @@ async def get_interpoop_evolution_plot(tz: str):
     logging.info("Plotting df %s", df.info())
 
     fig = interpoop_evolution_plot(df, tz)
+    html = fig.to_html(include_plotlyjs="cdn", full_html=True)
+    return html
+
+@app.get("/events/weight-plot", response_class=HTMLResponse)
+async def get_weight_plot(tz: str):
+    df = events_dataframe()
+
+    fig = weight_plot(df, tz)
     html = fig.to_html(include_plotlyjs="cdn", full_html=True)
     return html

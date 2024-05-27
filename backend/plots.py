@@ -183,3 +183,22 @@ def add_interpoop_stats(df) -> pd.DataFrame:
     df["time_since_last_poop"] = pd.to_timedelta(df["time_since_last_poop"], unit="s")
 
     return df
+
+
+def weight_plot(df, tz) -> go.Figure:
+    df = df[df.event_type == "weight_recorded"]
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True).dt.tz_convert(
+        tz
+    )
+    # Create scatter plot
+    fig = go.Figure(data=go.Scatter(x=df.timestamp, y=df.weight_kg, mode='markers', marker=dict(size=10)))
+
+    # Update layout
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Weight (kg)",
+        showlegend=False,
+        plot_bgcolor='white',  # Set plot background color to white
+        height=600,
+    )
+    return fig

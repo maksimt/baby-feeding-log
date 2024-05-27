@@ -10,6 +10,7 @@ function ReportPage() {
     // State for plot URLs
     const [plotUrl, setPlotUrl] = useState(`${config.API_URL}/events/cumulative-history-plot/?tz=${tz}&milkOz=1.0`);
     const [interpoopPlotUrl, setInterpoopPlotUrl] = useState(`${config.API_URL}/events/interpoop-evolution-plot/?tz=${tz}`);
+    const weightUrl = `${config.API_URL}/events/weight-plot?tz=${tz}`
 
     // Update plot URL when the parameter changes
     useEffect(() => {
@@ -44,6 +45,16 @@ function ReportPage() {
 
             <iframe
                 src={interpoopPlotUrl}
+                width="90%"
+                height="600"
+                style={{ border: 'none' }}
+                title="Plotly Plot"
+            ></iframe>
+
+            <h3>Weight</h3>
+
+            <iframe
+                src={weightUrl}
                 width="90%"
                 height="600"
                 style={{ border: 'none' }}
