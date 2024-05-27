@@ -239,7 +239,7 @@ function renderEventData(event) {
         case 'spit up':
             return `Spit up: ${event.amount_ml} ml`;
         case 'weight_recorded':
-            return `Weight: ${event.weight_kg} kg (${event.weight_lbs} lbs)`;
+            return `I weigh ${event.weight_kg} kg (${event.weight_kg * 2.2} lbs)!!!`;
         case 'incomplete_feeding':
             return `Incomplete feeding data recorded for day: ${event.notes}`;
         default:

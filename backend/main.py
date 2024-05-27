@@ -139,7 +139,12 @@ async def get_events(
 
     # Filter events by type if specified
     if event_type:
-        events = [event for event in events if event.event_type == event_type]
+        filter_events = [event for event in events if event.event_type == event_type]
+        if event_type == 'milestone':
+            wr_events = [event for event in events if event.event_type == "weight_recorded"]
+            logging.info("Also including %d weight_recorded events", len(wr_events))
+            filter_events += wr_events
+        events = filter_events
 
     # Sort events by timestamp in reverse order
     sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)
@@ -161,14 +166,14 @@ async def get_events(
 
         # Include image URLs in the response
         event_images_dir = IMAGES_DIR / e.id
-        picture_links = (
+        picture_links = e.picture_links + (
             [e.picture_link] if hasattr(e, "picture_link") and e.picture_link else []
         )
         if event_images_dir.exists():
             picture_links += [
                 f"/images/{e.id}/{img.name}" for img in event_images_dir.iterdir()
             ]
-        e.picture_links = picture_links
+        e.picture_links = list(set(picture_links))
 
     return sorted_events
 
