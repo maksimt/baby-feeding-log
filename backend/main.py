@@ -124,15 +124,22 @@ async def get_image(event_id: str, image_id: str):
             MilestoneEvent,
             OtherEvent,
             BathEvent,
+            WeightRecordedEvent,
+            IncompleteFeedingEvent,
         ]
     ],
 )
 async def get_events(
     limit: Optional[int] = Query(
         None, description="Number of most recent events to return"
-    )
+    ),
+    event_type: Optional[str] = Query(None, description="Type of events to return"),
 ):
     events = load_events()
+
+    # Filter events by type if specified
+    if event_type:
+        events = [event for event in events if event.event_type == event_type]
 
     # Sort events by timestamp in reverse order
     sorted_events = sorted(events, key=lambda x: x.timestamp, reverse=True)

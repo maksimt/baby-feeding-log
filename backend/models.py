@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, ValidationError, validator, HttpUrl
 
 
@@ -19,6 +19,8 @@ class Event(BaseModel):
             "milestone",
             "bath",
             "other",
+            "incomplete_feeding",
+            "weight_recorded",
         ]:
             raise ValueError("Invalid event type")
         return v
@@ -57,6 +59,15 @@ class SpitUpEvent(Event):
     amount_ml: float
 
 
+class WeightRecordedEvent(Event):
+    weight_kg: float
+    picture_links: Optional[List[str]]
+
+
+class IncompleteFeedingEvent(Event):
+    pass
+
+
 def create_event_object(data: dict) -> Event:
     event_type = data.get("event_type")
     try:
@@ -74,6 +85,10 @@ def create_event_object(data: dict) -> Event:
             return PoopEvent(**data)
         elif event_type == "spit up":
             return SpitUpEvent(**data)
+        elif event_type == "weight_recorded":
+            return WeightRecordedEvent(**data)
+        elif event_type == "incomplete_feeding":
+            return IncompleteFeedingEvent(**data)
         else:
             raise ValidationError("Unsupported event type")
     except ValidationError:

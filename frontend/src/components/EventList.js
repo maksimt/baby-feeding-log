@@ -31,7 +31,7 @@ function handlePrint() {
     window.print();
 }
 
-function EventList({ numberOfEventsToDisplay }) {
+function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
     const [events, setEvents] = useState({});
     const [lastPoopStats, setLastPoopStats] = useState({ lastPoopTime: null, totalOzSinceLastPoop: 0, totalMinsBreastfeedingSinceLastPoop: 0 });
     const [editingEvent, setEditingEvent] = useState(null);
@@ -42,8 +42,11 @@ function EventList({ numberOfEventsToDisplay }) {
         async function fetchEvents() {
             try {
                 let getUrl = `${config.API_URL}/events/`;
-                if (numberOfEventsToDisplay != -1) {
+                if (numberOfEventsToDisplay !== -1) {
                     getUrl = `${getUrl}?limit=${numberOfEventsToDisplay}`
+                }
+                if (eventType !== 'all') {
+                    getUrl = `${getUrl}${getUrl.includes('?')?'&':'?'}event_type=${eventType}`
                 }
                 const response = await fetch(getUrl);
                 const data = await response.json();
@@ -130,12 +133,12 @@ function EventList({ numberOfEventsToDisplay }) {
 
     return (
         <div>
-            <span className="sinceLastPoop">Since Last {getEmoji("poop")}: {lastPoopStats.hoursSinceLastPoop ? lastPoopStats.hoursSinceLastPoop : 'N/A'} hours; {getEmoji("feeding")} {lastPoopStats.totalOzSinceLastPoop} oz; {getEmoji("breastfeeding")} {lastPoopStats.totalMinsBreastfeedingSinceLastPoop} mins</span>
+            {dailyStats && (<span className="sinceLastPoop">Since Last {getEmoji("poop")}: {lastPoopStats.hoursSinceLastPoop ? lastPoopStats.hoursSinceLastPoop : 'N/A'} hours; {getEmoji("feeding")} {lastPoopStats.totalOzSinceLastPoop} oz; {getEmoji("breastfeeding")} {lastPoopStats.totalMinsBreastfeedingSinceLastPoop} mins</span>)}
             <br />
             {Object.keys(events).map((date, index) => (
                 <div key={index}>
                     <h3>{date}</h3>
-                    <p>Total {getEmoji("feeding")}: {calculateFeedingTotals(events[date])} oz, {getEmoji("breastfeeding")}: {calculateBreastfeedingMinutes(events[date])} mins</p>
+                    {dailyStats && (<p>Total {getEmoji("feeding")}: {calculateFeedingTotals(events[date])} oz, {getEmoji("breastfeeding")}: {calculateBreastfeedingMinutes(events[date])} mins</p>)}
                     <ul style={{ listStyleType: 'none' }}>
                         {events[date].map((event, idx) => (
                             <li key={idx} style={{ color: getColor(event.event_type) }}>
@@ -160,17 +163,19 @@ function EventList({ numberOfEventsToDisplay }) {
                                                 </div>
                                             )
                                         ))}
-                                        {(event.event_type === 'milestone' && <div>
-                                            <label htmlFor="editImages">Upload Images:</label>
-                                            <input
-                                                type="file"
-                                                id="editImages"
-                                                name="editImages"
-                                                accept="image/png, image/jpeg"
-                                                multiple
-                                                onChange={handleEditImageChange}
-                                            />
-                                        </div>)}
+                                        {(event.event_type === 'milestone' || event.event_type === 'weight_recorded') && (
+                                            <div>
+                                                <label htmlFor="editImages">Upload Images:</label>
+                                                <input
+                                                    type="file"
+                                                    id="editImages"
+                                                    name="editImages"
+                                                    accept="image/png, image/jpeg"
+                                                    multiple
+                                                    onChange={handleEditImageChange}
+                                                />
+                                            </div>
+                                        )}
                                         <button onClick={saveEdit}>Save</button>
                                     </div>
                                 ) : (
@@ -233,6 +238,10 @@ function renderEventData(event) {
             return `Consistency: ${event.consistency}; Since last poop: ate ${event.total_oz_since_last_poop} oz, 🕰️ ${event.time_since_last_poop}`;
         case 'spit up':
             return `Spit up: ${event.amount_ml} ml`;
+        case 'weight_recorded':
+            return `Weight: ${event.weight_kg} kg (${event.weight_lbs} lbs)`;
+        case 'incomplete_feeding':
+            return `Incomplete feeding data recorded for day: ${event.notes}`;
         default:
             return '';
     }
@@ -253,6 +262,10 @@ function getColor(eventType) {
             return '#cc9966';
         case 'spit up':
             return '#b3b3cc';
+        case 'weight_recorded':
+            return 'lightcoral';
+        case 'incomplete_feeding':
+            return 'lightgoldenrodyellow';
         default:
             return 'black';
     }

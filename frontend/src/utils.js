@@ -15,6 +15,10 @@ export function getEmoji(eventType) {
             return '🛁'; // Bathtub emoji for baths
         case 'other':
             return '🗂️';
+        case 'weight_recorded':
+            return '⚖️'
+        case 'incomplete_feeding':
+            return '❌'
         default:
             return '❓'; // Question mark emoji for unknown types
     }

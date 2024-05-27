@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { getEmoji, formatDateToInputString } from '../utils';
 import config from '../config';
 
-function AddEventForm() {
+function AddEventForm({ defaultEventType }) {
     const [event, setEvent] = useState({
         timestamp: new Date(),
-        event_type: 'feeding',
+        event_type: defaultEventType,
         notes: '',
         amount_oz: '',
         consistency: '',
@@ -13,6 +13,8 @@ function AddEventForm() {
         time_left: '',
         time_right: '',
         description: '',
+        weight_kg: '',
+        weight_lbs: '',
         picture_links: [] // Update to hold multiple picture links
     });
     const [images, setImages] = useState([]);
@@ -30,9 +32,19 @@ function AddEventForm() {
                 time_left: '',
                 time_right: '',
                 description: '',
+                weight_kg: '',
+                weight_lbs: '',
                 picture_links: [],
                 [name]: value
             });
+        } else if (name === 'weight_kg') {
+            const weight_kg = parseFloat(value);
+            const weight_lbs = (weight_kg * 2.20462).toFixed(2);
+            setEvent({ ...event, weight_kg, weight_lbs });
+        } else if (name === 'weight_lbs') {
+            const weight_lbs = parseFloat(value);
+            const weight_kg = (weight_lbs / 2.20462).toFixed(2);
+            setEvent({ ...event, weight_lbs, weight_kg });
         } else {
             setEvent({ ...event, [name]: value });
         }
@@ -61,6 +73,8 @@ function AddEventForm() {
             eventToSend.consistency = event.consistency;
         } else if (event.event_type === 'spit up') {
             eventToSend.amount_ml = parseFloat(event.amount_ml);
+        } else if (event.event_type === 'weight_recorded') {
+            eventToSend.weight_kg = parseFloat(event.weight_kg);
         }
 
         const response = await fetch(`${config.API_URL}/events/`, {
@@ -110,6 +124,8 @@ function AddEventForm() {
                     <option value="spit up">{getEmoji("spit up")} Spit Up</option>
                     <option value="bath">{getEmoji("bath")} Bath</option>
                     <option value="milestone">{getEmoji("milestone")} Milestone</option>
+                    <option value="weight_recorded">{getEmoji("weight_recorded")} Weight Recorded</option>
+                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Feeding</option>
                     <option value="other">{getEmoji("other")} Other</option>
                 </select>
             </div>
@@ -144,8 +160,32 @@ function AddEventForm() {
                         multiple
                         onChange={handleImageChange}
                     />
+                    <br/>
                     <label htmlFor="description">Description:</label>
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
+                </div>
+            )}
+            {event.event_type === 'weight_recorded' && (
+                <div>
+                    <label htmlFor="weight_kg">Weight (kg):</label>
+                    <input type="number" id="weight_kg" name="weight_kg" value={event.weight_kg || ''} onChange={handleChange} placeholder="Weight (kg)" required />
+                    <label htmlFor="weight_lbs">Weight (lbs):</label>
+                    <input type="number" id="weight_lbs" name="weight_lbs" value={event.weight_lbs || ''} onChange={handleChange} placeholder="Weight (lbs)" required />
+                    <label htmlFor="images">Upload Images:</label>
+                    <input
+                        type="file"
+                        id="images"
+                        name="images"
+                        accept="image/png, image/jpeg"
+                        multiple
+                        onChange={handleImageChange}
+                    />
+                </div>
+            )}
+            {event.event_type === 'incomplete_feeding' && (
+                <div>
+                    <label htmlFor="notes">Notes:</label>
+                    <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
                 </div>
             )}
             {event.event_type === 'other' && (
@@ -154,17 +194,6 @@ function AddEventForm() {
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
                 </div>
             )}
-
-            {event.event_type === 'spit up' && (
-                <div>
-                    <label htmlFor="amount_ml">Amount (ml):</label>
-                    <input type="number" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="Amount (ml)" required />
-                </div>
-            )}
-            <div>
-                <label htmlFor="notes">Notes:</label>
-                <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
-            </div>
             <button type="submit">Add Event</button>
         </form>
     );
