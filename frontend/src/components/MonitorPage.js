@@ -11,48 +11,51 @@ const VideoPlayer = ({ src, type }) => {
     const videoRef = React.useRef(null);
 
     React.useEffect(() => {
-        if (type === 'dash' && videoRef.current && !isIOS) {
-            const player = dashjs.MediaPlayer().create();
-            player.initialize(videoRef.current, src, true);
-            return () => {
-                if (player) {
-                    player.reset();
+
+
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(videoRef.current, src, true);
+        // These settings taken from https://dashif.org/dash.js/pages/advanced/low-latency.html
+        player.updateSettings({
+            streaming: {
+                delay: {
+                    liveDelay: 4
+                },
+                liveCatchup: {
+                    maxDrift: 1,
+                    playbackRate: {
+                        max: 1,
+                        min: -0.5
+                    }
                 }
-            };
-        }
+            }
+        });
+
+        return () => {
+            if (player) {
+                player.reset();
+            }
+        };
+
     }, [src, type]);
     
 
     return (
         <div>
-            {type === 'hls' ? (
-                <ReactHlsPlayer
-                    // playerRef={(player) => (videoRef.current = player)}
-                    src={src}
-                    autoPlay={true}
-                    controls={true}
-                    width="100%"
-                    height="20px"
-                />
-            ) : (
-                    <video ref={videoRef} autoPlay controls style={{ width: '100%', height: '50px' }} />
-            )}
+            <video ref={videoRef} autoPlay controls style={{ width: '100%', height: '50px' }} />
         </div>
     );
 };
 
 function MonitorPage() {
-    const hlsStreamUrl = "http://babymonitor.local:8080/hls/stream.m3u8";
-    const dashStreamUrl = "http://babymonitor.local:8080/dash/stream.mpd";
-    let isAndroid = true;
-    const streamUrl = isAndroid ? dashStreamUrl : hlsStreamUrl;
-    const streamType = isAndroid ? 'dash' : 'hls';
+    const streamUrl = "http://babymonitor.local:8080/dash/stream.mpd";
+    const streamType = 'dash'
 
     const [statusIcon, setStatusIcon] = React.useState('🔴'); // Default to red
     const [restartAttempted, setRestartAttempted] = React.useState(false);
 
     React.useEffect(() => {
-        const intervalId = setInterval(checkWebcamStatus, 1000); // Check status every 1 second
+        const intervalId = setInterval(checkWebcamStatus, 5000); // Check status every 1 second
 
         return () => clearInterval(intervalId); // Clean up interval on component unmount
     }, []);
