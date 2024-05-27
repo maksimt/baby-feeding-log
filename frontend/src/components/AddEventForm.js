@@ -8,8 +8,8 @@ function AddEventForm({ defaultEventType }) {
         event_type: defaultEventType,
         notes: '',
         amount_oz: '',
-        consistency: '',
         amount_ml: '',
+        consistency: '',
         time_left: '',
         time_right: '',
         description: '',
@@ -27,8 +27,8 @@ function AddEventForm({ defaultEventType }) {
             setEvent({
                 ...event,
                 amount_oz: '',
-                consistency: '',
                 amount_ml: '',
+                consistency: '',
                 time_left: '',
                 time_right: '',
                 description: '',
@@ -45,6 +45,14 @@ function AddEventForm({ defaultEventType }) {
             const weight_lbs = parseFloat(value);
             const weight_kg = (weight_lbs / 2.20462).toFixed(2);
             setEvent({ ...event, weight_lbs, weight_kg });
+        } else if (name === 'amount_oz') {
+            const amount_oz = parseFloat(value);
+            const amount_ml = (amount_oz * 29.5735).toFixed(2);
+            setEvent({ ...event, amount_oz, amount_ml });
+        } else if (name === 'amount_ml') {
+            const amount_ml = parseFloat(value);
+            const amount_oz = (amount_ml / 29.5735).toFixed(2);
+            setEvent({ ...event, amount_ml, amount_oz });
         } else {
             setEvent({ ...event, [name]: value });
         }
@@ -63,6 +71,7 @@ function AddEventForm({ defaultEventType }) {
 
         if (event.event_type === 'feeding') {
             eventToSend.amount_oz = parseFloat(event.amount_oz);
+            eventToSend.amount_ml = parseFloat(event.amount_ml);
         } else if (event.event_type === 'breastfeeding') {
             eventToSend.time_left = parseInt(event.time_left);
             eventToSend.time_right = parseInt(event.time_right);
@@ -125,14 +134,17 @@ function AddEventForm({ defaultEventType }) {
                     <option value="bath">{getEmoji("bath")} Bath</option>
                     <option value="milestone">{getEmoji("milestone")} Milestone</option>
                     <option value="weight_recorded">{getEmoji("weight_recorded")} Weight Recorded</option>
-                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Feeding</option>
+                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Feeding Data Recorded for Day</option>
                     <option value="other">{getEmoji("other")} Other</option>
                 </select>
             </div>
             {event.event_type === 'feeding' && (
                 <div>
-                    <label htmlFor="amount_oz">Amount (oz):</label>
-                    <input type="number" id="amount_oz" name="amount_oz" value={event.amount_oz || ''} onChange={handleChange} placeholder="Amount (oz)" required />
+                    <label >Amount: </label>
+                    <label htmlFor="amount_oz">oz:</label>
+                    <input type="number" id="amount_oz" name="amount_oz" value={event.amount_oz || ''} onChange={handleChange} placeholder="Amount (oz)" />
+                    <label htmlFor="amount_ml"> or ml:</label>
+                    <input type="number" id="amount_ml" name="amount_ml" value={event.amount_ml || ''} onChange={handleChange} placeholder="Amount (ml)" />
                 </div>
             )}
             {event.event_type === 'breastfeeding' && (
@@ -160,7 +172,7 @@ function AddEventForm({ defaultEventType }) {
                         multiple
                         onChange={handleImageChange}
                     />
-                    <br/>
+                    <br />
                     <label htmlFor="description">Description:</label>
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
                 </div>
@@ -182,18 +194,18 @@ function AddEventForm({ defaultEventType }) {
                     />
                 </div>
             )}
-            {event.event_type === 'incomplete_feeding' && (
-                <div>
-                    <label htmlFor="notes">Notes:</label>
-                    <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
-                </div>
-            )}
+            
+            
             {event.event_type === 'other' && (
                 <div>
                     <label htmlFor="description">Description:</label>
                     <input type="text" id="description" name="description" value={event.description} onChange={handleChange} placeholder="Description" required />
                 </div>
             )}
+            <div>
+                <label htmlFor="notes">Notes:</label>
+                <input type="text" id="notes" name="notes" value={event.notes} onChange={handleChange} placeholder="Notes" />
+            </div>
             <button type="submit">Add Event</button>
         </form>
     );
