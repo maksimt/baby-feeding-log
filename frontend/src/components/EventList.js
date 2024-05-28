@@ -27,6 +27,29 @@ async function deleteEvent(timestamp) {
     }
 }
 
+function confirmDeleteImage(eventId, imageId) {
+    if (window.confirm('Are you sure you want to delete this image?')) {
+        deleteImage(eventId, imageId);
+    }
+}
+
+async function deleteImage(eventId, imageId) {
+    try {
+        const response = await fetch(`${config.API_URL}/events/${eventId}/images/${imageId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Failed to delete image.');
+        }
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        alert('Error deleting image.');
+    }
+}
+
 function handlePrint() {
     window.print();
 }
@@ -46,7 +69,7 @@ function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
                     getUrl = `${getUrl}?limit=${numberOfEventsToDisplay}`
                 }
                 if (eventType !== 'all') {
-                    getUrl = `${getUrl}${getUrl.includes('?')?'&':'?'}event_type=${eventType}`
+                    getUrl = `${getUrl}${getUrl.includes('?') ? '&' : '?'}event_type=${eventType}`
                 }
                 const response = await fetch(getUrl);
                 const data = await response.json();
@@ -174,6 +197,33 @@ function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
                                                     multiple
                                                     onChange={handleEditImageChange}
                                                 />
+                                            </div>
+                                        )}
+                                        {event.picture_links && event.picture_links.length > 0 && (
+                                            <div>
+                                                {event.picture_links.map((link, i) => (
+                                                    <div key={i} style={{ position: 'relative', display: 'inline-block', margin: '10px' }}>
+                                                        <img
+                                                            src={link.startsWith('http') ? link : `${config.API_URL}${link}`}
+                                                            alt={`Event ${i}`}
+                                                            style={{ maxHeight: '300px' }}
+                                                        />
+                                                        <button
+                                                            onClick={() => confirmDeleteImage(event.id, link.split('/').pop())}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: '0',
+                                                                right: '0',
+                                                                backgroundColor: 'red',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            X
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                         <button onClick={saveEdit}>Save</button>

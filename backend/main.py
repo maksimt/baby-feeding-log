@@ -103,12 +103,23 @@ async def upload_images(event_id: str, images: List[UploadFile] = File(...)):
         logging.exception(e)
         raise HTTPException(status_code=500, detail="Failed to upload images")
 
+from datetime import datetime, timedelta
+
 
 @app.get("/images/{event_id}/{image_id}")
 async def get_image(event_id: str, image_id: str):
     image_path = IMAGES_DIR / event_id / f"{image_id}"
     if image_path.exists():
-        return FileResponse(image_path)
+        last_modified = datetime.utcfromtimestamp(image_path.stat().st_mtime).strftime(
+            "%a, %d %b %Y %H:%M:%S GMT"
+        )
+        etag = str(image_path.stat().st_mtime)
+        headers = {
+            "Cache-Control": f"public, max-age={int(timedelta(days=7).total_seconds())}",
+            "Last-Modified": last_modified,
+            "ETag": etag,
+        }
+        return FileResponse(image_path, headers=headers)
     raise HTTPException(status_code=404, detail="Image not found")
 
 
@@ -193,6 +204,20 @@ async def delete_event(id: str):
     except Exception as e:
         logging.exception(e)
         raise HTTPException(status_code=500, detail="Failed to delete event")
+
+
+@app.delete("/events/{event_id}/images/{image_id}")
+async def delete_image(event_id: str, image_id: str):
+    try:
+        image_path = IMAGES_DIR / event_id / f"{image_id}"
+        if image_path.exists():
+            os.remove(image_path)
+            return {"success": True, "msg": "Image deleted"}
+        else:
+            raise HTTPException(status_code=404, detail="Image not found")
+    except Exception as e:
+        logging.exception(e)
+        raise HTTPException(status_code=500, detail="Failed to delete image")
 
 
 @app.get("/events/cumulative-history-plot", response_class=HTMLResponse)

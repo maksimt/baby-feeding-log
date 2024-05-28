@@ -1,10 +1,6 @@
 import React from 'react';
-
-import ReactHlsPlayer from 'react-hls-player';
-import { isIOS, isAndroid } from 'react-device-detect';
 import dashjs from 'dashjs';
 
-import config from '../config';
 
 
 const VideoPlayer = ({ src, type }) => {

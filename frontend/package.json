@@ -6,9 +6,7 @@
     "dashjs": "^4.7.4",
     "hls": "0.0.1",
     "react": "^17.0.2",
-    "react-device-detect": "^2.2.3",
     "react-dom": "^17.0.2",
-    "react-hls-player": "^3.0.7",
     "react-router-dom": "^6.23.0",
     "react-scripts": "4.0.3"
   },
