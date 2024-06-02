@@ -104,12 +104,13 @@ function MonitorPage() {
 
     return (
         <div>
+            <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio + Video</button>
+            <h3>Audio:</h3>
             <div style={{ top: '10px', left: '10px', fontSize: '24px' }}>
                 {statusIcon}
                 <VideoPlayer src={streamUrl} type={streamType} />
-                <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio + Video</button>
             </div>
-
+            <h3>Video:</h3>
             <iframe src="http://babymonitor.local:9081" frameBorder="0" width="100%"
                 height="720px" allowFullScreen></iframe>
         </div>
