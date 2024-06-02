@@ -1,51 +1,57 @@
 import React from 'react';
 import dashjs from 'dashjs';
-
-
+import HlsPlayer from 'react-hls-player';
 
 const VideoPlayer = ({ src, type }) => {
     const videoRef = React.useRef(null);
 
     React.useEffect(() => {
-
-
-        const player = dashjs.MediaPlayer().create();
-        player.initialize(videoRef.current, src, true);
-        // These settings taken from https://dashif.org/dash.js/pages/advanced/low-latency.html
-        player.updateSettings({
-            streaming: {
-                delay: {
-                    liveDelay: 4
-                },
-                liveCatchup: {
-                    maxDrift: 1,
-                    playbackRate: {
-                        max: 1,
-                        min: -0.5
+        if (type === 'dash') {
+            const player = dashjs.MediaPlayer().create();
+            player.initialize(videoRef.current, src, true);
+            // These settings taken from https://dashif.org/dash.js/pages/advanced/low-latency.html
+            player.updateSettings({
+                streaming: {
+                    delay: {
+                        liveDelay: 4
+                    },
+                    liveCatchup: {
+                        maxDrift: 1,
+                        playbackRate: {
+                            max: 1,
+                            min: -0.5
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return () => {
-            if (player) {
-                player.reset();
-            }
-        };
-
+            return () => {
+                if (player) {
+                    player.reset();
+                }
+            };
+        }
     }, [src, type]);
-    
 
     return (
         <div>
-            <video ref={videoRef} autoPlay controls style={{ width: '100%', height: '50px' }} />
+            {type === 'dash' ? (
+                <video ref={videoRef} autoPlay controls style={{ width: '100%', height: '150px' }} />
+            ) : (
+                <HlsPlayer
+                    src={src}
+                    autoPlay
+                    controls
+                    style={{ width: '100%', height: '150px' }}
+                />
+            )}
         </div>
     );
 };
 
 function MonitorPage() {
-    const streamUrl = "http://babymonitor.local:8080/dash/stream.mpd";
-    const streamType = 'dash'
+    const hlsStreamUrl = "http://babymonitor.local:8080/hls/stream.m3u8";
+    const dashStreamUrl = "http://babymonitor.local:8080/dash/stream.mpd";
 
     const [statusIcon, setStatusIcon] = React.useState('🔴'); // Default to red
     const [restartAttempted, setRestartAttempted] = React.useState(false);
@@ -87,12 +93,14 @@ function MonitorPage() {
             }
         } catch (error) {
             console.error('Error checking webcam status:', error);
-
             setStatusIcon('🔴');
             alert('Please restart the audio stream.')
-
         }
     };
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const streamUrl = isAndroid ? dashStreamUrl : hlsStreamUrl;
+    const streamType = isAndroid ? 'dash' : 'hls';
 
     return (
         <div>
@@ -102,8 +110,8 @@ function MonitorPage() {
                 <button onClick={restartWebcam} style={{ marginTop: '10px', marginBottom: '10px' }}>Restart Audio + Video</button>
             </div>
 
-            <iframe src="http://babymonitor.local:9081" frameborder="0" width="100%"
-                height="720px" allowfullscreen></iframe>
+            <iframe src="http://babymonitor.local:9081" frameBorder="0" width="100%"
+                height="720px" allowFullScreen></iframe>
         </div>
     );
 }
