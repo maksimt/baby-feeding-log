@@ -9,7 +9,6 @@ const VideoPlayer = ({ src, type }) => {
         if (type === 'dash') {
             const player = dashjs.MediaPlayer().create();
             player.initialize(videoRef.current, src, true);
-            // These settings taken from https://dashif.org/dash.js/pages/advanced/low-latency.html
             player.updateSettings({
                 streaming: {
                     delay: {
@@ -55,6 +54,7 @@ function MonitorPage() {
 
     const [statusIcon, setStatusIcon] = React.useState('🔴'); // Default to red
     const [restartAttempted, setRestartAttempted] = React.useState(false);
+    const [alertShown, setAlertShown] = React.useState(false); // Add state to track if alert was shown
 
     React.useEffect(() => {
         const intervalId = setInterval(checkWebcamStatus, 1000); // Check status every 1 second
@@ -72,7 +72,7 @@ function MonitorPage() {
                 alert('Webcam service restarted successfully');
                 setTimeout(() => {
                     window.location.reload();
-                }, 1000); // Wait 5 seconds before reloading the page
+                }, 1000); // Wait 1 second before reloading the page
             } else {
                 alert('Failed to restart webcam service');
             }
@@ -87,14 +87,21 @@ function MonitorPage() {
             const response = await fetch('http://babymonitor.local:8123/webcam/');
             if (response.status === 200) {
                 setStatusIcon('🟢');
+                setAlertShown(false); // Reset alertShown when webcam is back online
             } else {
                 setStatusIcon('🔴');
-                alert('Please restart the audio stream.')
+                if (!alertShown) {
+                    alert('Please restart the audio stream.');
+                    setAlertShown(true); // Set alertShown to true after alerting
+                }
             }
         } catch (error) {
             console.error('Error checking webcam status:', error);
             setStatusIcon('🔴');
-            alert('Please restart the audio stream.')
+            if (!alertShown) {
+                alert('Please restart the audio stream.');
+                setAlertShown(true); // Set alertShown to true after alerting
+            }
         }
     };
 
