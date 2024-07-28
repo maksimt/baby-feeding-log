@@ -6,6 +6,7 @@ function ReportPage() {
 
     // State for the new parameter
     const [milkOz, setMilkOz] = useState(1.0);
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
 
     // State for plot URLs
     const [plotUrl, setPlotUrl] = useState(`${config.API_URL}/events/cumulative-history-plot/?tz=${tz}&milkOz=1.0`);
@@ -14,11 +15,23 @@ function ReportPage() {
     const [interpoopPlotUrl, setInterpoopPlotUrl] = useState(`${config.API_URL}/events/interpoop-evolution-plot/?tz=${tz}`);
     const weightUrl = `${config.API_URL}/events/weight-plot?tz=${tz}`
 
+    useEffect(() => {
+        config.fetchSettings().then(data => {
+            if (data) {
+                const ozPer15MinutesBreastfeeding = data.oz_per_15_minutes_breastfeeding;
+                setMilkOz(ozPer15MinutesBreastfeeding);
+                setSettingsLoaded(true);
+            }
+        });
+    }, []);
+
     // Update plot URL when the parameter changes
     useEffect(() => {
-        setPlotUrl(`${config.API_URL}/events/cumulative-history-plot/?tz=${tz}&milkOz=${milkOz}`);
-        setSleepPlotUrl(`${config.API_URL}/events/sleep-plot/?tz=${tz}&milkOz=${milkOz}`);
-    }, [milkOz, tz]);
+        if (settingsLoaded) {
+            setPlotUrl(`${config.API_URL}/events/cumulative-history-plot/?tz=${tz}&milkOz=${milkOz}`);
+            setSleepPlotUrl(`${config.API_URL}/events/sleep-plot/?tz=${tz}&milkOz=${milkOz}`);
+        }
+    }, [settingsLoaded, milkOz, tz]);
 
     return (
         <div>

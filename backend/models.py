@@ -13,6 +13,7 @@ class Event(BaseModel):
     def set_event_type(cls, v):
         if v not in [
             "feeding",
+            "solids_feeding",
             "poop",
             "spit up",
             "breastfeeding",
@@ -28,6 +29,12 @@ class Event(BaseModel):
 
 class FeedingEvent(Event):
     amount_oz: float
+
+
+class SolidsFeedingEvent(Event):
+    ingredients: List[str]
+    how_did_he_like_it: str = ""
+    amount_eaten_grams: float = 0.0
 
 
 class BreastFeedingEvent(Event):
@@ -73,6 +80,8 @@ def create_event_object(data: dict) -> Event:
     try:
         if event_type == "feeding":
             return FeedingEvent(**data)
+        elif event_type == "solids_feeding":
+            return SolidsFeedingEvent(**data)
         elif event_type == "breastfeeding":
             return BreastFeedingEvent(**data)
         elif event_type == "milestone":

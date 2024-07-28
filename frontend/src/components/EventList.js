@@ -60,10 +60,14 @@ function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
     const [editingEvent, setEditingEvent] = useState(null);
     const [editedEvent, setEditedEvent] = useState({});
     const [editImages, setEditImages] = useState([]);
+    const [settings, setSettings] = useState(null);
 
     useEffect(() => {
-        async function fetchEvents() {
+        async function fetchInitialData() {
             try {
+                const settingsData = await config.fetchSettings();
+                setSettings(settingsData);
+
                 let getUrl = `${config.API_URL}/events/`;
                 if (numberOfEventsToDisplay !== -1) {
                     getUrl = `${getUrl}?limit=${numberOfEventsToDisplay}`
@@ -77,11 +81,11 @@ function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
                 setEvents(groupedEvents);
                 calculateLastPoopStats(data);
             } catch (error) {
-                console.error('Failed to fetch events', error);
+                console.error('Failed to fetch initial data', error);
             }
         }
-        fetchEvents();
-    }, []);
+        fetchInitialData();
+    }, [numberOfEventsToDisplay, eventType]);
 
     function calculateLastPoopStats(events) {
         const lastPoop = events.find(e => e.event_type === 'poop');
@@ -154,14 +158,44 @@ function EventList({ numberOfEventsToDisplay, eventType, dailyStats }) {
         }
     }
 
+    function calculateBabyAge(date, birthTimestamp) {
+        const birthDate = new Date(birthTimestamp);
+        const targetDate = new Date(date);
+        const diffTime = Math.abs(targetDate - birthDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const months = Math.floor(diffDays / 30);
+        const days = diffDays % 30;
+        return `${months} months, ${days} days`;
+    }
+
+    function calculateTotalFeeding(events) {
+        return events.reduce((total, event) => {
+            if (event.event_type === 'feeding') {
+                return total + (event.amount_oz || 0);
+            } else if (event.event_type === 'breastfeeding') {
+                const minutes = event.time_left + event.time_right;
+                return total + (minutes / 15) * settings.oz_per_15_minutes_breastfeeding;
+            }
+            return total;
+        }, 0);
+    }
+
     return (
         <div>
-            {dailyStats && (<span className="sinceLastPoop">Since Last {getEmoji("poop")}: {lastPoopStats.hoursSinceLastPoop ? lastPoopStats.hoursSinceLastPoop : 'N/A'} hours; {getEmoji("feeding")} {lastPoopStats.totalOzSinceLastPoop} oz; {getEmoji("breastfeeding")} {lastPoopStats.totalMinsBreastfeedingSinceLastPoop} mins</span>)}
+            {dailyStats && (
+                <span className="sinceLastPoop">
+                    Since Last {getEmoji("poop")}: {lastPoopStats.hoursSinceLastPoop ? lastPoopStats.hoursSinceLastPoop : 'N/A'} hours; {getEmoji("feeding")} {lastPoopStats.totalOzSinceLastPoop} oz; {getEmoji("breastfeeding")} {lastPoopStats.totalMinsBreastfeedingSinceLastPoop} mins
+                </span>
+            )}
             <br />
             {Object.keys(events).map((date, index) => (
                 <div key={index}>
-                    <h3>{date}</h3>
-                    {dailyStats && (<p>Total {getEmoji("feeding")}: {calculateFeedingTotals(events[date])} oz, {getEmoji("breastfeeding")}: {calculateBreastfeedingMinutes(events[date])} mins</p>)}
+                    <h3>{date} ({settings && calculateBabyAge(date, settings.birth_timestamp)})</h3>
+                    {dailyStats && (
+                        <p>
+                            {getEmoji("feeding")}: {calculateBottleFeeding(events[date])} oz, {getEmoji("breastfeeding")}: {calculateBreastfeedingMinutes(events[date])} mins ({calculateTotalFeeding(events[date])} total)
+                        </p>
+                    )}
                     <ul style={{ listStyleType: 'none' }}>
                         {events[date].map((event, idx) => (
                             <li key={idx} style={{ color: getColor(event.event_type) }}>
@@ -264,7 +298,7 @@ function groupEventsByDate(events) {
     }, {});
 }
 
-function calculateFeedingTotals(events) {
+function calculateBottleFeeding(events) {
     return events.filter(e => e.event_type === 'feeding').reduce((total, curr) => total + (curr.amount_oz || 0), 0);
 }
 

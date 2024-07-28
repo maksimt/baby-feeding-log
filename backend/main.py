@@ -123,12 +123,18 @@ async def get_image(event_id: str, image_id: str):
     raise HTTPException(status_code=404, detail="Image not found")
 
 
+@app.get("/settings")
+async def get_settings():
+    return FileResponse("data/settings.json", media_type="application/json")
+
+
 @app.get(
     "/events/",
     response_model=List[
         Union[
             Event,
             FeedingEvent,
+            SolidsFeedingEvent,
             PoopEvent,
             SpitUpEvent,
             BreastFeedingEvent,
