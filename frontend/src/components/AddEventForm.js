@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { getEmoji, formatDateToInputString } from '../utils';
+import React, { useState, useEffect } from 'react';
+import { getEmoji, formatDateToInputString, getCookie, setCookie } from '../utils';
 import config from '../config';
 
-function AddEventForm({ defaultEventType }) {
+function AddEventForm() {
     const [event, setEvent] = useState({
         timestamp: new Date(),
-        event_type: defaultEventType,
+        event_type: '',
         notes: '',
         amount_oz: '',
         amount_ml: '',
@@ -16,11 +16,31 @@ function AddEventForm({ defaultEventType }) {
         weight_kg: '',
         weight_lbs: '',
         picture_links: [],
-        ingredients: '',  // For solids_feeding
-        how_did_he_like_it: '',  // For solids_feeding
-        amount_eaten_grams: ''  // For solids_feeding
+        ingredients: '',
+        how_did_he_like_it: '',
+        amount_eaten_grams: ''
     });
     const [images, setImages] = useState([]);
+
+    useEffect(() => {
+        let lastFiveEvents = getCookie('lastFiveEvents');
+        if (lastFiveEvents) {
+            lastFiveEvents = JSON.parse(lastFiveEvents);
+        } else {
+            lastFiveEvents = Array(5).fill('feeding');
+        }
+        const eventTypeCount = lastFiveEvents.reduce((acc, event) => {
+            acc[event] = (acc[event] || 0) + 1;
+            return acc;
+        }, {});
+        const majorityEventType = Object.keys(eventTypeCount).reduce((a, b) =>
+            eventTypeCount[a] > eventTypeCount[b] ? a : b
+        );
+        setEvent(prevEvent => ({
+            ...prevEvent,
+            event_type: majorityEventType
+        }));
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,9 +58,9 @@ function AddEventForm({ defaultEventType }) {
                 weight_kg: '',
                 weight_lbs: '',
                 picture_links: [],
-                ingredients: '',  // For solids_feeding
-                how_did_he_like_it: '',  // For solids_feeding
-                amount_eaten_grams: '',  // For solids_feeding
+                ingredients: '',
+                how_did_he_like_it: '',
+                amount_eaten_grams: '',
                 [name]: value
             });
         } else if (name === 'weight_kg') {
@@ -115,6 +135,20 @@ function AddEventForm({ defaultEventType }) {
                     body: formData
                 });
             }
+
+            // Update the last five events cookie
+            let lastFiveEvents = getCookie('lastFiveEvents');
+            if (lastFiveEvents) {
+                lastFiveEvents = JSON.parse(lastFiveEvents);
+            } else {
+                lastFiveEvents = [];
+            }
+            lastFiveEvents.push(event.event_type);
+            if (lastFiveEvents.length > 5) {
+                lastFiveEvents.shift();
+            }
+            setCookie('lastFiveEvents', JSON.stringify(lastFiveEvents), 7);
+
             window.location.reload();
         } else {
             alert(`Failed to add event: ${data.message}`);
@@ -140,12 +174,11 @@ function AddEventForm({ defaultEventType }) {
                     <option value="feeding">{getEmoji("feeding")} Feeding</option>
                     <option value="breastfeeding">{getEmoji("breastfeeding")} Breastfeeding</option>
                     <option value="poop">{getEmoji("poop")} Poop</option>
-                    <option value="spit up">{getEmoji("spit up")} Spit Up</option>
+                    <option value="spit_up">{getEmoji("spit_up")} Spit Up</option>
                     <option value="solids_feeding">{getEmoji("solids_feeding")} Solids Feeding</option>
                     <option value="bath">{getEmoji("bath")} Bath</option>
                     <option value="milestone">{getEmoji("milestone")} Milestone</option>
                     <option value="weight_recorded">{getEmoji("weight_recorded")} Weight Recorded</option>
-                    <option value="incomplete_feeding">{getEmoji("incomplete_feeding")} Incomplete Data</option>
                     <option value="other">{getEmoji("other")} Other</option>
                 </select>
             </div>
