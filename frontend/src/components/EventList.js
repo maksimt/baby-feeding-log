@@ -314,6 +314,8 @@ function renderEventData(event) {
             return `Breastfed left: ${event.time_left} min, right: ${event.time_right} min`;
         case 'milestone':
             return `Milestone: ${event.description}`;
+        case 'solids_feeding':
+            return `Solids: ${event.amount_eaten_grams}g (${event.ingredients}) | ${event.how_did_he_like_it}`
         case 'bath':
             return `Bath taken`;
         case 'other':
@@ -338,6 +340,8 @@ function getColor(eventType) {
             return 'lightblue';
         case 'milestone':
             return 'lightgreen';
+        case 'solids_feeding':
+            return 'orange';
         case 'bath':
             return 'lightyellow';
         case 'other':

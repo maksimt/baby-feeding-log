@@ -3,6 +3,8 @@ export function getEmoji(eventType) {
     switch (eventType) {
         case 'feeding':
             return '🍼'; // Bottle emoji for feeding
+        case 'solids_feeding':
+            return '🥕🍠🥑';
         case 'poop':
             return '💩'; // Poop emoji for poop
         case 'spit up':

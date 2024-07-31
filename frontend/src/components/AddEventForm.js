@@ -15,7 +15,10 @@ function AddEventForm({ defaultEventType }) {
         description: '',
         weight_kg: '',
         weight_lbs: '',
-        picture_links: [] // Update to hold multiple picture links
+        picture_links: [],
+        ingredients: '',  // For solids_feeding
+        how_did_he_like_it: '',  // For solids_feeding
+        amount_eaten_grams: ''  // For solids_feeding
     });
     const [images, setImages] = useState([]);
 
@@ -35,6 +38,9 @@ function AddEventForm({ defaultEventType }) {
                 weight_kg: '',
                 weight_lbs: '',
                 picture_links: [],
+                ingredients: '',  // For solids_feeding
+                how_did_he_like_it: '',  // For solids_feeding
+                amount_eaten_grams: '',  // For solids_feeding
                 [name]: value
             });
         } else if (name === 'weight_kg') {
@@ -84,6 +90,10 @@ function AddEventForm({ defaultEventType }) {
             eventToSend.amount_ml = parseFloat(event.amount_ml);
         } else if (event.event_type === 'weight_recorded') {
             eventToSend.weight_kg = parseFloat(event.weight_kg);
+        } else if (event.event_type === 'solids_feeding') {
+            eventToSend.ingredients = event.ingredients.split(',').map(ingredient => ingredient.trim());
+            eventToSend.how_did_he_like_it = event.how_did_he_like_it;
+            eventToSend.amount_eaten_grams = parseFloat(event.amount_eaten_grams);
         }
 
         const response = await fetch(`${config.API_URL}/events/`, {
@@ -131,7 +141,7 @@ function AddEventForm({ defaultEventType }) {
                     <option value="breastfeeding">{getEmoji("breastfeeding")} Breastfeeding</option>
                     <option value="poop">{getEmoji("poop")} Poop</option>
                     <option value="spit up">{getEmoji("spit up")} Spit Up</option>
-                    <option value="solids_feeding">{getEmoji("solids_feeding")} Incomplete Data</option>
+                    <option value="solids_feeding">{getEmoji("solids_feeding")} Solids Feeding</option>
                     <option value="bath">{getEmoji("bath")} Bath</option>
                     <option value="milestone">{getEmoji("milestone")} Milestone</option>
                     <option value="weight_recorded">{getEmoji("weight_recorded")} Weight Recorded</option>
@@ -141,7 +151,7 @@ function AddEventForm({ defaultEventType }) {
             </div>
             {event.event_type === 'feeding' && (
                 <div>
-                    <label >Amount: </label>
+                    <label>Amount: </label>
                     <label htmlFor="amount_oz">oz:</label>
                     <input type="number" id="amount_oz" name="amount_oz" value={event.amount_oz || ''} onChange={handleChange} placeholder="Amount (oz)" />
                     <label htmlFor="amount_ml"> or ml:</label>
@@ -195,8 +205,16 @@ function AddEventForm({ defaultEventType }) {
                     />
                 </div>
             )}
-            
-            
+            {event.event_type === 'solids_feeding' && (
+                <div>
+                    <label htmlFor="ingredients">Ingredients (comma separated):</label>
+                    <input type="text" id="ingredients" name="ingredients" value={event.ingredients} onChange={handleChange} placeholder="Ingredients" required />
+                    <label htmlFor="how_did_he_like_it">How did he like it?</label>
+                    <input type="text" id="how_did_he_like_it" name="how_did_he_like_it" value={event.how_did_he_like_it} onChange={handleChange} placeholder="How did he like it?" />
+                    <label htmlFor="amount_eaten_grams">Amount eaten (grams):</label>
+                    <input type="number" id="amount_eaten_grams" name="amount_eaten_grams" value={event.amount_eaten_grams} onChange={handleChange} placeholder="Amount eaten (grams)" />
+                </div>
+            )}
             {event.event_type === 'other' && (
                 <div>
                     <label htmlFor="description">Description:</label>
