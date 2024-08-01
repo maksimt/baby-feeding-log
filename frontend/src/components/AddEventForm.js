@@ -246,7 +246,7 @@ function AddEventForm() {
                     <label htmlFor="how_did_he_like_it">How did he like it?</label>
                     <input type="text" id="how_did_he_like_it" name="how_did_he_like_it" value={event.how_did_he_like_it} onChange={handleChange} placeholder="How did he like it?" />
                     <label htmlFor="amount_eaten_grams">Amount eaten (grams):</label>
-                    <input type="number" id="amount_eaten_grams" name="amount_eaten_grams" value={event.amount_eaten_grams} onChange={handleChange} placeholder="Amount eaten (grams)" />
+                    <input type="number" id="amount_eaten_grams" name="amount_eaten_grams" value={event.amount_eaten_grams} onChange={handleChange} placeholder="Amount eaten (grams)" required />
                 </div>
             )}
             {event.event_type === 'other' && (
